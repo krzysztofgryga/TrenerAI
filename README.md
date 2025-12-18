@@ -10,7 +10,7 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
   - Rest time between exercises
   - Training mode (circuit or common)
 - Semantic exercise search using vector embeddings
-- LLM-powered plan generation with GPT-4o
+- **Flexible LLM support**: OpenAI or local Ollama
 - RESTful API with FastAPI
 - Structured output with Pydantic models
 
@@ -18,8 +18,8 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   FastAPI       │────▶│   LangGraph     │────▶│   GPT-4o        │
-│   REST API      │     │   Workflow      │     │   LLM           │
+│   FastAPI       │────▶│   LangGraph     │────▶│  OpenAI/Ollama  │
+│   REST API      │     │   Workflow      │     │      LLM        │
 └─────────────────┘     └────────┬────────┘     └─────────────────┘
                                  │
                                  ▼
@@ -42,6 +42,7 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
 - **Qdrant** - Vector database for semantic search
 - **FastEmbed** - Lightweight embedding generation
 - **Pydantic** - Data validation and serialization
+- **Ollama** - Local LLM runtime (optional)
 
 ## Quick Start
 
@@ -49,7 +50,7 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
 
 - Python 3.10+
 - Docker & Docker Compose
-- OpenAI API key
+- **Either**: OpenAI API key **OR** Ollama installed locally
 
 ### Installation
 
@@ -77,23 +78,53 @@ uv sync
 4. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Edit .env - see configuration options below
 ```
 
-### Running
+### Running with Local LLM (Ollama)
 
-1. Start Qdrant database:
+1. Start Qdrant and Ollama:
 ```bash
 docker-compose up -d
 ```
 
-2. Seed the database with exercises:
+2. Pull a model (first time only):
 ```bash
-python seed_database.py
+docker exec trainer_ollama ollama pull llama3.2
+# Or for better results:
+docker exec trainer_ollama ollama pull qwen2.5:7b
 ```
 
-3. Start the API server:
+3. Configure `.env` for Ollama:
+```env
+LLM_PROVIDER=ollama
+LLM_MODEL=llama3.2
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+4. Seed the database and start API:
 ```bash
+python seed_database.py
+uvicorn app.main:app --reload
+```
+
+### Running with OpenAI
+
+1. Start Qdrant only:
+```bash
+docker-compose up -d qdrant
+```
+
+2. Configure `.env` for OpenAI:
+```env
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o
+OPENAI_API_KEY=sk-your-api-key
+```
+
+3. Seed the database and start API:
+```bash
+python seed_database.py
 uvicorn app.main:app --reload
 ```
 
@@ -107,6 +138,7 @@ The API will be available at `http://localhost:8000`
 |--------|----------|-------------|
 | GET | `/` | Status check |
 | GET | `/health` | Health check for orchestration |
+| GET | `/debug/config` | Show current configuration |
 | POST | `/generate-training` | Generate training plan |
 
 ### Generate Training Plan
@@ -157,7 +189,7 @@ TrenerAI/
 │   └── models/
 │       ├── __init__.py
 │       └── exercise.py  # Pydantic models
-├── docker-compose.yml   # Qdrant service
+├── docker-compose.yml   # Qdrant + Ollama services
 ├── seed_database.py     # Database seeding script
 ├── requirements.txt     # Dependencies
 ├── pyproject.toml       # Project configuration
@@ -170,11 +202,22 @@ Environment variables (`.env`):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key | (required) |
-| `OPENAI_MODEL` | LLM model to use | `gpt-4o` |
-| `OPENAI_TEMPERATURE` | LLM temperature | `0.2` |
+| `LLM_PROVIDER` | LLM provider: `openai` or `ollama` | `openai` |
+| `LLM_MODEL` | Model name | `gpt-4o` |
+| `LLM_TEMPERATURE` | LLM temperature (0.0-1.0) | `0.2` |
+| `OPENAI_API_KEY` | OpenAI API key (if using OpenAI) | - |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
 | `QDRANT_URL` | Qdrant server URL | `http://localhost:6333` |
 | `QDRANT_COLLECTION_NAME` | Vector collection name | `gym_exercises` |
+
+### Recommended Ollama Models
+
+| Model | Size | Quality | Speed |
+|-------|------|---------|-------|
+| `llama3.2` | 3B | Good | Fast |
+| `llama3.2:7b` | 7B | Better | Medium |
+| `qwen2.5:7b` | 7B | Better | Medium |
+| `mistral` | 7B | Good | Medium |
 
 ## Exercise Library
 

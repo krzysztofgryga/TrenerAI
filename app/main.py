@@ -66,11 +66,14 @@ def health_check():
 def debug_config():
     """Debug endpoint to check configuration (disable in production)."""
     import os
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
     return {
+        "llm_provider": provider,
+        "llm_model": os.getenv("LLM_MODEL", "gpt-4o"),
+        "ollama_base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        "openai_api_key_set": bool(os.getenv("OPENAI_API_KEY")),
         "qdrant_url": os.getenv("QDRANT_URL", "http://localhost:6333"),
         "collection_name": os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises"),
-        "openai_model": os.getenv("OPENAI_MODEL", "gpt-4o"),
-        "openai_api_key_set": bool(os.getenv("OPENAI_API_KEY")),
     }
 
 
