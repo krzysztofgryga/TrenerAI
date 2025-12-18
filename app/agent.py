@@ -11,6 +11,7 @@ Usage:
     result = app_graph.invoke({"num_people": 5, "difficulty": "medium", ...})
 """
 
+import json
 import os
 import logging
 from typing import List, TypedDict, Optional
@@ -294,31 +295,26 @@ def generate_plan(state: TrainerState) -> dict:
     # Determine target exercise count for main part
     target_main_count = state["num_people"] if state["mode"] == "circuit" else 5
 
-    system_prompt = """
-    You are a professional personal trainer. Your task is to create a training plan.
-    You have access to a list of exercises (CANDIDATES) retrieved from the database.
+    system_prompt = """You are a professional personal trainer. Create a training plan using ONLY exercises from the provided list.
 
-    GUIDELINES:
-    1. Select exercises ONLY from the provided candidate list.
-    2. Match the number of exercises in the main part: {target_count}.
-    3. Training mode: {mode_desc}.
+REQUIREMENTS:
+- Select {target_count} exercises for main_part
+- Training mode: {mode_desc}
+- Use ONLY exercises from the candidates below
 
-    CANDIDATES - WARMUP:
-    {warmup}
+CANDIDATES - WARMUP:
+{warmup}
 
-    CANDIDATES - MAIN:
-    {main}
+CANDIDATES - MAIN:
+{main}
 
-    CANDIDATES - COOLDOWN:
-    {cooldown}
+CANDIDATES - COOLDOWN:
+{cooldown}
 
-    Format the result exactly as JSON.
-    """
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{{"warmup": [{{"id": "...", "name": "...", "description": "...", "muscle_group": "general", "difficulty": "easy", "type": "warmup"}}], "main_part": [...], "cooldown": [...], "mode": "{mode}", "total_duration_minutes": 45}}"""
 
     prompt = ChatPromptTemplate.from_template(system_prompt)
-
-    # Create chain with structured output for type safety
-    chain = prompt | llm.with_structured_output(TrainingPlan)
 
     mode_description = (
         "Circuit stations (each person does different exercise)"
@@ -326,13 +322,51 @@ def generate_plan(state: TrainerState) -> dict:
         else "Everyone does the same exercise"
     )
 
-    result = chain.invoke({
-        "target_count": target_main_count,
-        "mode_desc": mode_description,
-        "warmup": format_docs(state["warmup_candidates"]),
-        "main": format_docs(state["main_candidates"]),
-        "cooldown": format_docs(state["cooldown_candidates"])
-    })
+    # For Ollama, we need to parse JSON manually as structured output may not work
+    if LLM_PROVIDER == "ollama":
+        chain = prompt | llm
+        response = chain.invoke({
+            "target_count": target_main_count,
+            "mode_desc": mode_description,
+            "mode": state["mode"],
+            "warmup": format_docs(state["warmup_candidates"]),
+            "main": format_docs(state["main_candidates"]),
+            "cooldown": format_docs(state["cooldown_candidates"])
+        })
+
+        # Extract JSON from response
+        response_text = response.content if hasattr(response, 'content') else str(response)
+
+        # Try to find JSON in the response
+        try:
+            # Try direct parsing first
+            plan_data = json.loads(response_text)
+        except json.JSONDecodeError:
+            # Try to extract JSON from markdown code block
+            import re
+            json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response_text)
+            if json_match:
+                plan_data = json.loads(json_match.group(1))
+            else:
+                # Try to find JSON object in text
+                json_match = re.search(r'\{[\s\S]*\}', response_text)
+                if json_match:
+                    plan_data = json.loads(json_match.group(0))
+                else:
+                    raise ValueError(f"Could not parse JSON from LLM response: {response_text[:500]}")
+
+        result = TrainingPlan(**plan_data)
+    else:
+        # For OpenAI, use structured output
+        chain = prompt | llm.with_structured_output(TrainingPlan)
+        result = chain.invoke({
+            "target_count": target_main_count,
+            "mode_desc": mode_description,
+            "mode": state["mode"],
+            "warmup": format_docs(state["warmup_candidates"]),
+            "main": format_docs(state["main_candidates"]),
+            "cooldown": format_docs(state["cooldown_candidates"])
+        })
 
     return {"final_plan": result.model_dump()}
 
