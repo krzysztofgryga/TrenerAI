@@ -1,11 +1,8 @@
 {
-    "name": "AI Trainer",
-    "short_name": "AI Trainer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "AI-powered training plan generator",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
