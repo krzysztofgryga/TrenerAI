@@ -98,6 +98,9 @@ class TrainingRequest(BaseModel):
         difficulty: Exercise difficulty level
         rest_time: Rest time between exercises in seconds (10-300)
         mode: Training mode (circuit or common)
+        warmup_count: Number of warmup exercises (1-10)
+        main_count: Number of main exercises (1-20)
+        cooldown_count: Number of cooldown exercises (1-10)
     """
     num_people: Annotated[int, Field(
         ge=1,
@@ -115,6 +118,21 @@ class TrainingRequest(BaseModel):
     mode: TrainingMode = Field(
         description="Training mode: circuit or common"
     )
+    warmup_count: Annotated[int, Field(
+        ge=1,
+        le=10,
+        description="Number of warmup exercises (1-10)"
+    )] = 3
+    main_count: Annotated[int, Field(
+        ge=1,
+        le=20,
+        description="Number of main exercises (1-20)"
+    )] = 5
+    cooldown_count: Annotated[int, Field(
+        ge=1,
+        le=10,
+        description="Number of cooldown exercises (1-10)"
+    )] = 3
 
 
 # =============================================================================
@@ -175,7 +193,7 @@ async def generate_training(request: TrainingRequest) -> dict:
     2. Generate a structured training plan using LLM
 
     Args:
-        request: Training parameters (num_people, difficulty, rest_time, mode)
+        request: Training parameters (num_people, difficulty, rest_time, mode, counts)
 
     Returns:
         dict: Generated training plan with warmup, main_part, and cooldown sections.
@@ -189,12 +207,16 @@ async def generate_training(request: TrainingRequest) -> dict:
             "num_people": 5,
             "difficulty": "medium",
             "rest_time": 60,
-            "mode": "circuit"
+            "mode": "circuit",
+            "warmup_count": 3,
+            "main_count": 5,
+            "cooldown_count": 3
         }
     """
     logger.info(
         f"Generating training plan: num_people={request.num_people}, "
-        f"difficulty={request.difficulty.value}, mode={request.mode.value}"
+        f"difficulty={request.difficulty.value}, mode={request.mode.value}, "
+        f"warmup={request.warmup_count}, main={request.main_count}, cooldown={request.cooldown_count}"
     )
 
     try:
@@ -203,7 +225,10 @@ async def generate_training(request: TrainingRequest) -> dict:
             "num_people": request.num_people,
             "difficulty": request.difficulty.value,
             "rest_time": request.rest_time,
-            "mode": request.mode.value
+            "mode": request.mode.value,
+            "warmup_count": request.warmup_count,
+            "main_count": request.main_count,
+            "cooldown_count": request.cooldown_count
         }
 
         # Invoke the AI workflow

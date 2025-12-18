@@ -93,6 +93,9 @@ class TrainerState(TypedDict):
         difficulty: Exercise difficulty level ('easy', 'medium', 'hard').
         rest_time: Rest time between exercises in seconds.
         mode: Training mode ('circuit' or 'common').
+        warmup_count: Desired number of warmup exercises.
+        main_count: Desired number of main exercises.
+        cooldown_count: Desired number of cooldown exercises.
         warmup_candidates: Retrieved warmup exercises from vector DB.
         main_candidates: Retrieved main exercises from vector DB.
         cooldown_candidates: Retrieved cooldown exercises from vector DB.
@@ -102,6 +105,9 @@ class TrainerState(TypedDict):
     difficulty: str
     rest_time: int
     mode: str
+    warmup_count: int
+    main_count: int
+    cooldown_count: int
     warmup_candidates: List[Document]
     main_candidates: List[Document]
     cooldown_candidates: List[Document]
@@ -194,10 +200,10 @@ def retrieve_exercises(state: TrainerState) -> dict:
     """
     Node 1: Retrieve exercise candidates from Qdrant vector database.
 
-    Searches for exercises in three categories:
-    - Warmup: 5 exercises (no difficulty filter)
-    - Main: Variable count based on num_people and mode, filtered by difficulty
-    - Cooldown: 5 exercises (no difficulty filter)
+    Searches for exercises in three categories with user-specified counts:
+    - Warmup: warmup_count exercises (no difficulty filter)
+    - Main: main_count exercises, filtered by difficulty
+    - Cooldown: cooldown_count exercises (no difficulty filter)
 
     Args:
         state: Current workflow state containing search parameters.
@@ -212,6 +218,11 @@ def retrieve_exercises(state: TrainerState) -> dict:
 
     vector_store = get_vector_store()
     difficulty = state["difficulty"]
+
+    # Get user-specified counts (with reasonable margins for selection)
+    warmup_limit = max(state.get("warmup_count", 3) + 2, 5)
+    main_limit = max(state.get("main_count", 5) + 5, 10)
+    cooldown_limit = max(state.get("cooldown_count", 3) + 2, 5)
 
     def search_category(category_type: str, limit: int = 10, filter_level: str = None) -> List[Document]:
         """
@@ -248,15 +259,10 @@ def retrieve_exercises(state: TrainerState) -> dict:
             filter=filter_obj
         )
 
-    # Calculate main exercise count based on mode
-    # Circuit mode: one exercise per person (minimum 10)
-    # Common mode: fixed 10 exercises
-    main_limit = max(state["num_people"], 10) if state["mode"] == "circuit" else 10
-
     return {
-        "warmup_candidates": search_category("warmup", limit=5),
+        "warmup_candidates": search_category("warmup", limit=warmup_limit),
         "main_candidates": search_category("main", limit=main_limit, filter_level=difficulty),
-        "cooldown_candidates": search_category("cooldown", limit=5)
+        "cooldown_candidates": search_category("cooldown", limit=cooldown_limit)
     }
 
 
@@ -292,13 +298,17 @@ def generate_plan(state: TrainerState) -> dict:
         """
         return "\n".join([f"- [ID: {d.metadata['id']}] {d.page_content}" for d in docs])
 
-    # Determine target exercise count for main part
-    target_main_count = state["num_people"] if state["mode"] == "circuit" else 5
+    # Get user-specified counts
+    warmup_count = state.get("warmup_count", 3)
+    main_count = state.get("main_count", 5)
+    cooldown_count = state.get("cooldown_count", 3)
 
     system_prompt = """You are a professional personal trainer. Create a training plan using ONLY exercises from the provided list.
 
 REQUIREMENTS:
-- Select {target_count} exercises for main_part
+- Select exactly {warmup_count} exercises for warmup
+- Select exactly {main_count} exercises for main_part
+- Select exactly {cooldown_count} exercises for cooldown
 - Training mode: {mode_desc}
 - Use ONLY exercises from the candidates below
 
@@ -326,7 +336,9 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
     if LLM_PROVIDER == "ollama":
         chain = prompt | llm
         response = chain.invoke({
-            "target_count": target_main_count,
+            "warmup_count": warmup_count,
+            "main_count": main_count,
+            "cooldown_count": cooldown_count,
             "mode_desc": mode_description,
             "mode": state["mode"],
             "warmup": format_docs(state["warmup_candidates"]),
@@ -360,7 +372,9 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
         # For OpenAI, use structured output
         chain = prompt | llm.with_structured_output(TrainingPlan)
         result = chain.invoke({
-            "target_count": target_main_count,
+            "warmup_count": warmup_count,
+            "main_count": main_count,
+            "cooldown_count": cooldown_count,
             "mode_desc": mode_description,
             "mode": state["mode"],
             "warmup": format_docs(state["warmup_candidates"]),
