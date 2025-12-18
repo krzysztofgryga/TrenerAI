@@ -19,16 +19,16 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
 ## Architecture
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   FastAPI       │────▶│   LangGraph     │────▶│  OpenAI/Ollama  │
-│   REST API      │     │   Workflow      │     │      LLM        │
-└─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐
-                        │   Qdrant        │
-                        │   Vector DB     │
-                        └─────────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Flutter       │────▶│   FastAPI       │────▶│   LangGraph     │────▶│  OpenAI/Ollama  │
+│   Mobile/Web    │     │   REST API      │     │   Workflow      │     │      LLM        │
+└─────────────────┘     └─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                                         │
+                                                         ▼
+                                                ┌─────────────────┐
+                                                │   Qdrant        │
+                                                │   Vector DB     │
+                                                └─────────────────┘
 ```
 
 ### Workflow
@@ -45,6 +45,7 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
 - **FastEmbed** - Lightweight embedding generation
 - **Pydantic** - Data validation and serialization
 - **Ollama** - Local LLM runtime (optional)
+- **Flutter** - Cross-platform mobile/web frontend
 
 ## Quick Start
 
@@ -190,19 +191,26 @@ Interactive API docs available at:
 
 ```
 TrenerAI/
-├── app/
+├── app/                       # Backend (Python/FastAPI)
 │   ├── __init__.py
-│   ├── main.py          # FastAPI application
-│   ├── agent.py         # LangGraph workflow
+│   ├── main.py                # FastAPI application
+│   ├── agent.py               # LangGraph workflow
 │   └── models/
 │       ├── __init__.py
-│       └── exercise.py  # Pydantic models
+│       └── exercise.py        # Pydantic models
+├── frontend/                  # Frontend (Flutter)
+│   ├── lib/
+│   │   ├── main.dart          # App entry point
+│   │   ├── models/            # Data models
+│   │   ├── screens/           # UI screens
+│   │   └── services/          # API service
+│   └── pubspec.yaml           # Flutter dependencies
 ├── data/
-│   └── exercises.json   # Exercise definitions (100 exercises)
-├── docker-compose.yml   # Qdrant + Ollama services
-├── seed_database.py     # Database seeding script
-├── requirements.txt     # Dependencies
-├── pyproject.toml       # Project configuration
+│   └── exercises.json         # Exercise definitions (100 exercises)
+├── docker-compose.yml         # Qdrant + Ollama services
+├── seed_database.py           # Database seeding script
+├── requirements.txt           # Python dependencies
+├── pyproject.toml             # Project configuration
 └── README.md
 ```
 
@@ -272,6 +280,52 @@ Fields:
 - `type`: Category - `warmup`, `main`, or `cooldown`
 - `level`: Difficulty - `easy`, `medium`, or `hard`
 - `desc`: Brief description for trainers
+
+## Flutter Frontend
+
+The project includes a cross-platform mobile/web app built with Flutter.
+
+### Prerequisites
+
+- Flutter SDK 3.0+: https://flutter.dev/docs/get-started/install
+
+### Running the Frontend
+
+```bash
+cd frontend
+
+# Get dependencies
+flutter pub get
+
+# Run on web
+flutter run -d chrome
+
+# Run on Android emulator
+flutter run -d android
+
+# Run on iOS simulator (macOS only)
+flutter run -d ios
+```
+
+### Backend Connection
+
+The app automatically detects the backend URL:
+- **Web**: `http://localhost:8000`
+- **Android Emulator**: `http://10.0.2.2:8000` (host machine alias)
+- **iOS/Desktop**: `http://localhost:8000`
+
+### Building for Production
+
+```bash
+# Web (outputs to frontend/build/web)
+flutter build web
+
+# Android APK
+flutter build apk
+
+# iOS (macOS only)
+flutter build ios
+```
 
 ## Development
 
