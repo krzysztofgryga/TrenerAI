@@ -20,10 +20,9 @@ from langgraph.graph import StateGraph, END
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_qdrant import QdrantVectorStore
+from langchain_community.vectorstores import Qdrant
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from qdrant_client import QdrantClient, models
-from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.models.exercise import TrainingPlan
 
@@ -114,7 +113,7 @@ class TrainerState(TypedDict):
 
 # Cached instances for lazy initialization
 _embeddings: Optional[FastEmbedEmbeddings] = None
-_vector_store: Optional[QdrantVectorStore] = None
+_vector_store: Optional[Qdrant] = None
 
 
 def check_collection_exists() -> bool:
@@ -133,7 +132,7 @@ def check_collection_exists() -> bool:
         return False
 
 
-def get_vector_store() -> QdrantVectorStore:
+def get_vector_store() -> Qdrant:
     """
     Get or create a connection to the Qdrant vector store.
 
@@ -141,7 +140,7 @@ def get_vector_store() -> QdrantVectorStore:
     caches it for subsequent calls.
 
     Returns:
-        QdrantVectorStore: Connected vector store instance.
+        Qdrant: Connected vector store instance.
 
     Raises:
         ConnectionError: If Qdrant is not accessible.
@@ -163,11 +162,22 @@ def get_vector_store() -> QdrantVectorStore:
 
     try:
         _embeddings = FastEmbedEmbeddings()
-        _vector_store = QdrantVectorStore.from_existing_collection(
-            embedding=_embeddings,
+        client = QdrantClient(url=QDRANT_URL)
+
+        _vector_store = Qdrant(
+            client=client,
             collection_name=COLLECTION_NAME,
-            url=QDRANT_URL
+            embeddings=_embeddings
         )
+
+        # Check if vector store was created successfully
+        if _vector_store is None:
+            raise ValueError(
+                f"Failed to connect to collection '{COLLECTION_NAME}'. "
+                f"The collection may be empty or corrupted. "
+                f"Try running 'python seed_database.py' again."
+            )
+
         logger.info("Vector store initialized successfully")
         return _vector_store
     except Exception as e:
