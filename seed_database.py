@@ -1,90 +1,113 @@
+"""
+Database seeding script for TrenerAI.
+
+Populates Qdrant vector database with exercise library.
+Run this script before starting the API server.
+"""
+
 import os
+import logging
+
 from dotenv import load_dotenv
 from langchain_core.documents import Document
-# ✅ ZMIANA: Używamy stabilnego wrappera z community zamiast eksperymentalnego
 from langchain_community.vectorstores import Qdrant
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
 load_dotenv()
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises")
 
-# BAZA TRENINGOWA
-raw_exercises = [
-    # --- ROZGRZEWKA ---
-    {"id": "w1", "name": "Pajacyki", "type": "warmup", "level": "easy", "desc": "Skoki z wymachami rąk."},
-    {"id": "w2", "name": "Bieg bokserski", "type": "warmup", "level": "easy",
-     "desc": "Bieg w miejscu z ciosami prostymi."},
-    {"id": "w3", "name": "Krążenia bioder", "type": "warmup", "level": "easy", "desc": "Obszerne krążenia biodrami."},
-    {"id": "w4", "name": "Wymachy ramion", "type": "warmup", "level": "easy",
-     "desc": "Dynamiczne wymachy w płaszczyźnie poziomej."},
-    {"id": "w5", "name": "Przysiady bez obciążenia", "type": "warmup", "level": "easy",
-     "desc": "Szybkie przysiady rozgrzewkowe."},
+# Exercise library
+EXERCISES = [
+    # Warmup exercises
+    {"id": "w1", "name": "Jumping Jacks", "type": "warmup", "level": "easy",
+     "desc": "Jump with arm swings."},
+    {"id": "w2", "name": "Boxing Run", "type": "warmup", "level": "easy",
+     "desc": "Run in place with straight punches."},
+    {"id": "w3", "name": "Hip Circles", "type": "warmup", "level": "easy",
+     "desc": "Wide hip rotation circles."},
+    {"id": "w4", "name": "Arm Swings", "type": "warmup", "level": "easy",
+     "desc": "Dynamic horizontal arm swings."},
+    {"id": "w5", "name": "Bodyweight Squats", "type": "warmup", "level": "easy",
+     "desc": "Quick warmup squats."},
 
-    # --- CZĘŚĆ GŁÓWNA (EASY) ---
-    {"id": "m_e1", "name": "Przysiad klasyczny", "type": "main", "level": "easy",
-     "desc": "Przysiad z ciężarem własnego ciała."},
-    {"id": "m_e2", "name": "Pompki na kolanach", "type": "main", "level": "easy", "desc": "Ułatwiona wersja pompki."},
-    {"id": "m_e3", "name": "Plank (Deska)", "type": "main", "level": "easy", "desc": "Utrzymaj pozycję przez 30s."},
+    # Main exercises - Easy
+    {"id": "m_e1", "name": "Classic Squat", "type": "main", "level": "easy",
+     "desc": "Bodyweight squat."},
+    {"id": "m_e2", "name": "Knee Push-ups", "type": "main", "level": "easy",
+     "desc": "Modified push-up on knees."},
+    {"id": "m_e3", "name": "Plank", "type": "main", "level": "easy",
+     "desc": "Hold position for 30 seconds."},
 
-    # --- CZĘŚĆ GŁÓWNA (MEDIUM) ---
-    {"id": "m_m1", "name": "Pompki klasyczne", "type": "main", "level": "medium",
-     "desc": "Klatka do samej ziemi, ciało proste."},
-    {"id": "m_m2", "name": "Wykroki chodzone", "type": "main", "level": "medium",
-     "desc": "Idź przed siebie robiąc głębokie wykroki."},
+    # Main exercises - Medium
+    {"id": "m_m1", "name": "Classic Push-ups", "type": "main", "level": "medium",
+     "desc": "Chest to ground, body straight."},
+    {"id": "m_m2", "name": "Walking Lunges", "type": "main", "level": "medium",
+     "desc": "Walk forward with deep lunges."},
     {"id": "m_m3", "name": "Kettlebell Swing", "type": "main", "level": "medium",
-     "desc": "Wymach odważnikiem z biodra."},
-    {"id": "m_m4", "name": "Podciąganie australijskie", "type": "main", "level": "medium",
-     "desc": "Podciąganie na TRX lub niskim drążku."},
+     "desc": "Hip-driven weight swing."},
+    {"id": "m_m4", "name": "Australian Pull-ups", "type": "main", "level": "medium",
+     "desc": "Pull-ups on TRX or low bar."},
 
-    # --- CZĘŚĆ GŁÓWNA (HARD) ---
+    # Main exercises - Hard
     {"id": "m_h1", "name": "Burpees", "type": "main", "level": "hard",
-     "desc": "Padnij, powstań, wyskocz. Maksymalne tempo."},
-    {"id": "m_h2", "name": "Pompki diamentowe", "type": "main", "level": "hard",
-     "desc": "Dłonie złączone w kształt diamentu."},
-    {"id": "m_h3", "name": "Pistolety (Przysiad jednonóż)", "type": "main", "level": "hard",
-     "desc": "Przysiad na jednej nodze."},
+     "desc": "Down, up, jump. Maximum tempo."},
+    {"id": "m_h2", "name": "Diamond Push-ups", "type": "main", "level": "hard",
+     "desc": "Hands in diamond position."},
+    {"id": "m_h3", "name": "Pistol Squats", "type": "main", "level": "hard",
+     "desc": "Single-leg squat."},
     {"id": "m_h4", "name": "Man Maker", "type": "main", "level": "hard",
-     "desc": "Pompka, wiosłowanie hantlem i wyciśnięcie nad głowę."},
+     "desc": "Push-up, dumbbell row, and overhead press."},
 
-    # --- RELAKS ---
-    {"id": "c1", "name": "Pozycja dziecka", "type": "cooldown", "level": "easy",
-     "desc": "Rozluźnienie pleców na macie."},
-    {"id": "c2", "name": "Rozciąganie kanapowe", "type": "cooldown", "level": "easy",
-     "desc": "Rozciąganie mięśnia czworogłowego przy ścianie."},
-    {"id": "c3", "name": "Zwis na drążku", "type": "cooldown", "level": "easy",
-     "desc": "Luźny zwis dla dekompresji kręgosłupa."},
+    # Cooldown exercises
+    {"id": "c1", "name": "Child's Pose", "type": "cooldown", "level": "easy",
+     "desc": "Back relaxation on mat."},
+    {"id": "c2", "name": "Couch Stretch", "type": "cooldown", "level": "easy",
+     "desc": "Quad stretch against wall."},
+    {"id": "c3", "name": "Bar Hang", "type": "cooldown", "level": "easy",
+     "desc": "Dead hang for spinal decompression."},
 ]
 
 
 def main():
-    print("🚀 Rozpoczynam indeksowanie bazy (FastEmbed)...")
+    """Seed the vector database with exercise library."""
+    logger.info("Starting database seeding with FastEmbed...")
 
-    # 1. Przygotowanie dokumentów
+    # Prepare documents
     documents = []
-    for ex in raw_exercises:
-        metadata = {"id": ex["id"], "name": ex["name"], "type": ex["type"], "level": ex["level"]}
+    for ex in EXERCISES:
+        metadata = {
+            "id": ex["id"],
+            "name": ex["name"],
+            "type": ex["type"],
+            "level": ex["level"]
+        }
         content = f"{ex['name']}: {ex['desc']}"
         documents.append(Document(page_content=content, metadata=metadata))
 
-    # 2. Inicjalizacja Embeddings
+    # Initialize embeddings
     embeddings = FastEmbedEmbeddings()
 
-    print(f"📤 Wysyłanie {len(documents)} wektorów do Qdrant...")
-    print(f"🔗 Adres: {QDRANT_URL}, Kolekcja: {COLLECTION_NAME}")
+    logger.info(f"Sending {len(documents)} vectors to Qdrant...")
+    logger.info(f"URL: {QDRANT_URL}, Collection: {COLLECTION_NAME}")
 
-    # 3. Jedna prosta komenda, która robi wszystko (Tworzy kolekcję i dodaje dane)
-    # Używamy importu z langchain_community - jest niezawodny
+    # Create collection and add documents
     Qdrant.from_documents(
         documents,
         embeddings,
         url=QDRANT_URL,
         collection_name=COLLECTION_NAME,
-        force_recreate=True  # To czyści starą kolekcję, więc nie musisz robić tego ręcznie
+        force_recreate=True
     )
 
-    print("✅ Sukces! Baza danych została załadowana.")
+    logger.info("Database seeding completed successfully!")
 
 
 if __name__ == "__main__":
