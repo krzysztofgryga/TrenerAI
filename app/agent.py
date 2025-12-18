@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from qdrant_client import models
@@ -20,26 +20,41 @@ logger = logging.getLogger(__name__)
 # Configuration
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
-OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Validate required configuration
-if not OPENAI_API_KEY:
-    logger.warning("OPENAI_API_KEY not set - API calls will fail")
+# LLM Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()  # "openai" or "ollama"
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o")
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 
-# 1. Definicja Stanu
+def get_llm() -> BaseChatModel:
+    """Get LLM instance based on configuration."""
+    if LLM_PROVIDER == "ollama":
+        from langchain_ollama import ChatOllama
+        logger.info(f"Using Ollama LLM: {LLM_MODEL} at {OLLAMA_BASE_URL}")
+        return ChatOllama(
+            model=LLM_MODEL,
+            temperature=LLM_TEMPERATURE,
+            base_url=OLLAMA_BASE_URL,
+        )
+    else:
+        from langchain_openai import ChatOpenAI
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            logger.warning("OPENAI_API_KEY not set - API calls will fail")
+        logger.info(f"Using OpenAI LLM: {LLM_MODEL}")
+        return ChatOpenAI(model=LLM_MODEL, temperature=LLM_TEMPERATURE)
+
+
 class TrainerState(TypedDict):
     num_people: int
     difficulty: str
     rest_time: int
     mode: str
-
     warmup_candidates: List[Document]
     main_candidates: List[Document]
     cooldown_candidates: List[Document]
-
     final_plan: dict
 
 
@@ -96,7 +111,6 @@ def retrieve_exercises(state: TrainerState):
             filter=filter_obj
         )
 
-    # Logika ilościowa
     main_limit = max(state["num_people"], 10) if state["mode"] == "circuit" else 10
 
     return {
@@ -108,9 +122,9 @@ def retrieve_exercises(state: TrainerState):
 
 def generate_plan(state: TrainerState):
     """Node 2: Generate training plan using LLM."""
-    logger.info("Generating training plan with LLM...")
+    logger.info(f"Generating training plan with {LLM_PROVIDER.upper()} LLM...")
 
-    llm = ChatOpenAI(model=OPENAI_MODEL, temperature=OPENAI_TEMPERATURE)
+    llm = get_llm()
 
     def format_docs(docs):
         return "\n".join([f"- [ID: {d.metadata['id']}] {d.page_content}" for d in docs])

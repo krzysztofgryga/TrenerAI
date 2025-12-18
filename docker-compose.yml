@@ -9,7 +9,25 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      # To zapewnia, że dane zostaną na dysku w folderze qdrant_storage
       - ./qdrant_storage:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
+
+  # Optional: Local LLM with Ollama
+  # Uncomment to use local LLM instead of OpenAI
+  ollama:
+    image: ollama/ollama:latest
+    container_name: trainer_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_models:/root/.ollama
+    # For GPU support, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]

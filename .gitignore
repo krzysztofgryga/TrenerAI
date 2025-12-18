@@ -39,6 +39,7 @@ Thumbs.db
 
 # Project specific
 qdrant_storage/
+ollama_models/
 
 # Testing
 .pytest_cache/
