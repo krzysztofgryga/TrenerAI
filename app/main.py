@@ -1,4 +1,5 @@
 import logging
+import traceback
 from enum import Enum
 from typing import Annotated
 
@@ -61,6 +62,18 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/debug/config")
+def debug_config():
+    """Debug endpoint to check configuration (disable in production)."""
+    import os
+    return {
+        "qdrant_url": os.getenv("QDRANT_URL", "http://localhost:6333"),
+        "collection_name": os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises"),
+        "openai_model": os.getenv("OPENAI_MODEL", "gpt-4o"),
+        "openai_api_key_set": bool(os.getenv("OPENAI_API_KEY")),
+    }
+
+
 @app.post("/generate-training")
 async def generate_training(request: TrainingRequest):
     """
@@ -88,9 +101,10 @@ async def generate_training(request: TrainingRequest):
 
     except Exception as e:
         logger.error(f"Error generating training plan: {str(e)}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=500,
-            detail="Failed to generate training plan. Please try again."
+            detail=f"Failed to generate training plan: {str(e)}"
         )
 
 

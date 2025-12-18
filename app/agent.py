@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, TypedDict
+from typing import List, TypedDict, Optional
 
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
@@ -22,6 +22,11 @@ QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Validate required configuration
+if not OPENAI_API_KEY:
+    logger.warning("OPENAI_API_KEY not set - API calls will fail")
 
 
 # 1. Definicja Stanu
@@ -38,19 +43,33 @@ class TrainerState(TypedDict):
     final_plan: dict
 
 
-# Initialize embeddings and vector store
-embeddings = FastEmbedEmbeddings()
-vector_store = QdrantVectorStore.from_existing_collection(
-    embedding=embeddings,
-    collection_name=COLLECTION_NAME,
-    url=QDRANT_URL
-)
+# Lazy initialization for vector store
+_embeddings: Optional[FastEmbedEmbeddings] = None
+_vector_store: Optional[QdrantVectorStore] = None
+
+
+def get_vector_store() -> QdrantVectorStore:
+    """Get or create vector store connection (lazy initialization)."""
+    global _embeddings, _vector_store
+
+    if _vector_store is None:
+        logger.info(f"Connecting to Qdrant at {QDRANT_URL}, collection: {COLLECTION_NAME}")
+        _embeddings = FastEmbedEmbeddings()
+        _vector_store = QdrantVectorStore.from_existing_collection(
+            embedding=_embeddings,
+            collection_name=COLLECTION_NAME,
+            url=QDRANT_URL
+        )
+        logger.info("Vector store initialized successfully")
+
+    return _vector_store
 
 
 def retrieve_exercises(state: TrainerState):
     """Node 1: Retrieve exercise candidates from vector database."""
     logger.info("Searching exercise database (Qdrant)...")
 
+    vector_store = get_vector_store()
     difficulty = state["difficulty"]
 
     def search_category(category_type, limit=10, filter_level=None):
