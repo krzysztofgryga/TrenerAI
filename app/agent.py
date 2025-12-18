@@ -1,28 +1,27 @@
 import os
-from typing import List, TypedDict, Literal
-from dotenv import load_dotenv
+import logging
+from typing import List, TypedDict
 
-# LangChain & LangGraph
+from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import PydanticOutputParser
-
-# Qdrant & Embeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-from qdrant_client import QdrantClient, models
+from qdrant_client import models
 
-# Nasz model danych
 from app.models.exercise import TrainingPlan
 
 load_dotenv()
 
-# --- KONFIGURACJA ---
+logger = logging.getLogger(__name__)
+
+# Configuration
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 
 
 # 1. Definicja Stanu
@@ -39,11 +38,8 @@ class TrainerState(TypedDict):
     final_plan: dict
 
 
-# 2. Inicjalizacja narzędzi
+# Initialize embeddings and vector store
 embeddings = FastEmbedEmbeddings()
-
-# ✅ POPRAWKA: Używamy metody from_existing_collection zamiast konstruktora
-# To zapobiega błędowi "TypeError: QdrantVectorStore() takes no arguments"
 vector_store = QdrantVectorStore.from_existing_collection(
     embedding=embeddings,
     collection_name=COLLECTION_NAME,
@@ -51,9 +47,9 @@ vector_store = QdrantVectorStore.from_existing_collection(
 )
 
 
-# --- WĘZEŁ 1: RETRIEVER (Wyszukiwarka) ---
 def retrieve_exercises(state: TrainerState):
-    print("🔍 [Agent] Przeszukuję bazę wiedzy (Qdrant)...")
+    """Node 1: Retrieve exercise candidates from vector database."""
+    logger.info("Searching exercise database (Qdrant)...")
 
     difficulty = state["difficulty"]
 
@@ -91,11 +87,11 @@ def retrieve_exercises(state: TrainerState):
     }
 
 
-# --- WĘZEŁ 2: PLANNER (LLM) ---
 def generate_plan(state: TrainerState):
-    print("🧠 [Agent] Układam plan treningowy...")
+    """Node 2: Generate training plan using LLM."""
+    logger.info("Generating training plan with LLM...")
 
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.2)
+    llm = ChatOpenAI(model=OPENAI_MODEL, temperature=OPENAI_TEMPERATURE)
 
     def format_docs(docs):
         return "\n".join([f"- [ID: {d.metadata['id']}] {d.page_content}" for d in docs])
@@ -103,32 +99,35 @@ def generate_plan(state: TrainerState):
     target_main_count = state["num_people"] if state["mode"] == "circuit" else 5
 
     system_prompt = """
-    Jesteś profesjonalnym trenerem personalnym. Twoim zadaniem jest ułożenie planu treningowego.
-    Masz dostępną listę ćwiczeń (KANDYDACI) pobraną z bazy danych.
+    You are a professional personal trainer. Your task is to create a training plan.
+    You have access to a list of exercises (CANDIDATES) retrieved from the database.
 
-    WYTYCZNE:
-    1. Wybierz ćwiczenia TYLKO z podanej listy kandydatów.
-    2. Dopasuj ilość ćwiczeń w części głównej: {target_count}.
-    3. Tryb treningu: {mode_desc}.
+    GUIDELINES:
+    1. Select exercises ONLY from the provided candidate list.
+    2. Match the number of exercises in the main part: {target_count}.
+    3. Training mode: {mode_desc}.
 
-    KANDYDACI - ROZGRZEWKA:
+    CANDIDATES - WARMUP:
     {warmup}
 
-    KANDYDACI - GŁÓWNA:
+    CANDIDATES - MAIN:
     {main}
 
-    KANDYDACI - RELAKS:
+    CANDIDATES - COOLDOWN:
     {cooldown}
 
-    Sformatuj wynik dokładnie jako JSON.
+    Format the result exactly as JSON.
     """
 
     prompt = ChatPromptTemplate.from_template(system_prompt)
 
     chain = prompt | llm.with_structured_output(TrainingPlan)
 
-    mode_description = "Stacje obwodowe (każda osoba robi co innego)" if state[
-                                                                             "mode"] == "circuit" else "Wszyscy robią to samo"
+    mode_description = (
+        "Circuit stations (each person does different exercise)"
+        if state["mode"] == "circuit"
+        else "Everyone does the same exercise"
+    )
 
     result = chain.invoke({
         "target_count": target_main_count,
@@ -138,15 +137,13 @@ def generate_plan(state: TrainerState):
         "cooldown": format_docs(state["cooldown_candidates"])
     })
 
-    return {"final_plan": result.dict()}
+    return {"final_plan": result.model_dump()}
 
 
-# --- BUDOWA GRAFU ---
+# Build LangGraph workflow
 workflow = StateGraph(TrainerState)
-
 workflow.add_node("retrieve", retrieve_exercises)
 workflow.add_node("plan", generate_plan)
-
 workflow.set_entry_point("retrieve")
 workflow.add_edge("retrieve", "plan")
 workflow.add_edge("plan", END)
