@@ -9,6 +9,8 @@ AI-powered training plan generator for fitness trainers. Creates personalized wo
   - Difficulty level (easy, medium, hard)
   - Rest time between exercises
   - Training mode (circuit or common)
+  - Customizable exercise counts per phase (warmup, main, cooldown)
+- **100 pre-defined exercises** loaded from external JSON file
 - Semantic exercise search using vector embeddings
 - **Flexible LLM support**: OpenAI or local Ollama
 - RESTful API with FastAPI
@@ -151,7 +153,10 @@ Request body:
   "num_people": 5,
   "difficulty": "medium",
   "rest_time": 60,
-  "mode": "circuit"
+  "mode": "circuit",
+  "warmup_count": 3,
+  "main_count": 5,
+  "cooldown_count": 3
 }
 ```
 
@@ -160,6 +165,9 @@ Parameters:
 - `difficulty` (string): `easy`, `medium`, or `hard`
 - `rest_time` (int, 10-300): Rest time between exercises in seconds
 - `mode` (string): `circuit` (different exercises per person) or `common` (same for all)
+- `warmup_count` (int, 1-10, default 3): Number of warmup exercises
+- `main_count` (int, 1-20, default 5): Number of main exercises
+- `cooldown_count` (int, 1-10, default 3): Number of cooldown exercises
 
 Response:
 ```json
@@ -189,6 +197,8 @@ TrenerAI/
 │   └── models/
 │       ├── __init__.py
 │       └── exercise.py  # Pydantic models
+├── data/
+│   └── exercises.json   # Exercise definitions (100 exercises)
 ├── docker-compose.yml   # Qdrant + Ollama services
 ├── seed_database.py     # Database seeding script
 ├── requirements.txt     # Dependencies
@@ -221,13 +231,47 @@ Environment variables (`.env`):
 
 ## Exercise Library
 
-The system includes 18 pre-defined exercises:
+The system includes **100 pre-defined exercises** in `data/exercises.json`:
 
-- **Warmup (5)**: Jumping Jacks, Boxing Run, Hip Circles, Arm Swings, Bodyweight Squats
-- **Main - Easy (3)**: Classic Squat, Knee Push-ups, Plank
-- **Main - Medium (4)**: Classic Push-ups, Walking Lunges, Kettlebell Swing, Australian Pull-ups
-- **Main - Hard (4)**: Burpees, Diamond Push-ups, Pistol Squats, Man Maker
-- **Cooldown (3)**: Child's Pose, Couch Stretch, Bar Hang
+- **Warmup (20)**: Jumping Jacks, High Knees, Butt Kicks, Arm Circles, and more
+- **Main - Easy (20)**: Classic Squat, Knee Push-ups, Plank, Wall Sit, and more
+- **Main - Medium (20)**: Classic Push-ups, Walking Lunges, Kettlebell Swing, and more
+- **Main - Hard (20)**: Burpees, Diamond Push-ups, Pistol Squats, Muscle-ups, and more
+- **Cooldown (20)**: Child's Pose, Couch Stretch, Bar Hang, Cat-Cow Stretch, and more
+
+### Custom Exercise File
+
+You can modify `data/exercises.json` to add your own exercises or use a custom file:
+
+```bash
+# Use default file (data/exercises.json)
+python seed_database.py
+
+# Use custom file
+python seed_database.py --file /path/to/my-exercises.json
+```
+
+Exercise file format:
+```json
+{
+  "exercises": [
+    {
+      "id": "w1",
+      "name": "Jumping Jacks",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Jump with arm swings. Great cardio warmup."
+    }
+  ]
+}
+```
+
+Fields:
+- `id`: Unique identifier (e.g., "w1", "m_e1", "c5")
+- `name`: Exercise name
+- `type`: Category - `warmup`, `main`, or `cooldown`
+- `level`: Difficulty - `easy`, `medium`, or `hard`
+- `desc`: Brief description for trainers
 
 ## Development
 

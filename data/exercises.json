@@ -1,0 +1,708 @@
+{
+  "exercises": [
+    {
+      "id": "w1",
+      "name": "Jumping Jacks",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Jump with arm swings. Great cardio warmup."
+    },
+    {
+      "id": "w2",
+      "name": "Boxing Run",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Run in place with straight punches."
+    },
+    {
+      "id": "w3",
+      "name": "Hip Circles",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Wide hip rotation circles for mobility."
+    },
+    {
+      "id": "w4",
+      "name": "Arm Swings",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Dynamic horizontal arm swings."
+    },
+    {
+      "id": "w5",
+      "name": "Bodyweight Squats",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Quick warmup squats to activate legs."
+    },
+    {
+      "id": "w6",
+      "name": "High Knees",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Run in place lifting knees high."
+    },
+    {
+      "id": "w7",
+      "name": "Butt Kicks",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Run in place kicking heels to glutes."
+    },
+    {
+      "id": "w8",
+      "name": "Leg Swings",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Forward and backward leg swings for hip mobility."
+    },
+    {
+      "id": "w9",
+      "name": "Torso Twists",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Standing rotations to warm up the spine."
+    },
+    {
+      "id": "w10",
+      "name": "Neck Rolls",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Gentle neck circles to release tension."
+    },
+    {
+      "id": "w11",
+      "name": "Shoulder Circles",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Forward and backward shoulder rotations."
+    },
+    {
+      "id": "w12",
+      "name": "Ankle Circles",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Rotate ankles to prepare for lower body work."
+    },
+    {
+      "id": "w13",
+      "name": "Side Lunges",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Lateral lunges to open up the hips."
+    },
+    {
+      "id": "w14",
+      "name": "Arm Circles",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Small to large arm circles to warm shoulders."
+    },
+    {
+      "id": "w15",
+      "name": "Skipping",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Light skipping to elevate heart rate."
+    },
+    {
+      "id": "w16",
+      "name": "March in Place",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Controlled marching with high arm swings."
+    },
+    {
+      "id": "w17",
+      "name": "Inchworms",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Walk hands out to plank and back."
+    },
+    {
+      "id": "w18",
+      "name": "Cat-Cow Stretch",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Spine mobility on hands and knees."
+    },
+    {
+      "id": "w19",
+      "name": "World's Greatest Stretch",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Lunge with rotation and reach."
+    },
+    {
+      "id": "w20",
+      "name": "Toy Soldiers",
+      "type": "warmup",
+      "level": "easy",
+      "desc": "Walk forward kicking legs straight up."
+    },
+
+    {
+      "id": "m_e1",
+      "name": "Classic Squat",
+      "type": "main",
+      "level": "easy",
+      "desc": "Bodyweight squat with proper form."
+    },
+    {
+      "id": "m_e2",
+      "name": "Knee Push-ups",
+      "type": "main",
+      "level": "easy",
+      "desc": "Modified push-up on knees for beginners."
+    },
+    {
+      "id": "m_e3",
+      "name": "Plank",
+      "type": "main",
+      "level": "easy",
+      "desc": "Hold plank position for 30 seconds."
+    },
+    {
+      "id": "m_e4",
+      "name": "Wall Sit",
+      "type": "main",
+      "level": "easy",
+      "desc": "Hold seated position against wall."
+    },
+    {
+      "id": "m_e5",
+      "name": "Glute Bridge",
+      "type": "main",
+      "level": "easy",
+      "desc": "Lie on back, lift hips to ceiling."
+    },
+    {
+      "id": "m_e6",
+      "name": "Dead Bug",
+      "type": "main",
+      "level": "easy",
+      "desc": "Core exercise with opposite arm and leg extension."
+    },
+    {
+      "id": "m_e7",
+      "name": "Bird Dog",
+      "type": "main",
+      "level": "easy",
+      "desc": "Balance exercise on hands and knees."
+    },
+    {
+      "id": "m_e8",
+      "name": "Standing Calf Raises",
+      "type": "main",
+      "level": "easy",
+      "desc": "Rise up on toes repeatedly."
+    },
+    {
+      "id": "m_e9",
+      "name": "Superman Hold",
+      "type": "main",
+      "level": "easy",
+      "desc": "Lie face down, lift arms and legs."
+    },
+    {
+      "id": "m_e10",
+      "name": "Side Plank (Modified)",
+      "type": "main",
+      "level": "easy",
+      "desc": "Side plank on knee for beginners."
+    },
+    {
+      "id": "m_e11",
+      "name": "Step-ups",
+      "type": "main",
+      "level": "easy",
+      "desc": "Step up onto a low platform."
+    },
+    {
+      "id": "m_e12",
+      "name": "Bench Dips",
+      "type": "main",
+      "level": "easy",
+      "desc": "Tricep dips using a bench or chair."
+    },
+    {
+      "id": "m_e13",
+      "name": "Lying Leg Raises",
+      "type": "main",
+      "level": "easy",
+      "desc": "Lie on back, raise legs to 90 degrees."
+    },
+    {
+      "id": "m_e14",
+      "name": "Reverse Lunges",
+      "type": "main",
+      "level": "easy",
+      "desc": "Step backward into a lunge."
+    },
+    {
+      "id": "m_e15",
+      "name": "Seated Row (Band)",
+      "type": "main",
+      "level": "easy",
+      "desc": "Pull resistance band while seated."
+    },
+    {
+      "id": "m_e16",
+      "name": "Wall Push-ups",
+      "type": "main",
+      "level": "easy",
+      "desc": "Push-ups against a wall for beginners."
+    },
+    {
+      "id": "m_e17",
+      "name": "Bicycle Crunches (Slow)",
+      "type": "main",
+      "level": "easy",
+      "desc": "Controlled bicycle motion for abs."
+    },
+    {
+      "id": "m_e18",
+      "name": "Standing Side Bends",
+      "type": "main",
+      "level": "easy",
+      "desc": "Bend sideways to work obliques."
+    },
+    {
+      "id": "m_e19",
+      "name": "Good Mornings (Bodyweight)",
+      "type": "main",
+      "level": "easy",
+      "desc": "Hip hinge movement without weight."
+    },
+    {
+      "id": "m_e20",
+      "name": "Pallof Press (Band)",
+      "type": "main",
+      "level": "easy",
+      "desc": "Anti-rotation core exercise with band."
+    },
+
+    {
+      "id": "m_m1",
+      "name": "Classic Push-ups",
+      "type": "main",
+      "level": "medium",
+      "desc": "Chest to ground, body straight throughout."
+    },
+    {
+      "id": "m_m2",
+      "name": "Walking Lunges",
+      "type": "main",
+      "level": "medium",
+      "desc": "Walk forward with deep lunges."
+    },
+    {
+      "id": "m_m3",
+      "name": "Kettlebell Swing",
+      "type": "main",
+      "level": "medium",
+      "desc": "Hip-driven kettlebell swing."
+    },
+    {
+      "id": "m_m4",
+      "name": "Australian Pull-ups",
+      "type": "main",
+      "level": "medium",
+      "desc": "Horizontal pull-ups on low bar or TRX."
+    },
+    {
+      "id": "m_m5",
+      "name": "Goblet Squats",
+      "type": "main",
+      "level": "medium",
+      "desc": "Squat holding weight at chest."
+    },
+    {
+      "id": "m_m6",
+      "name": "Dumbbell Rows",
+      "type": "main",
+      "level": "medium",
+      "desc": "Single arm row with dumbbell."
+    },
+    {
+      "id": "m_m7",
+      "name": "Box Jumps",
+      "type": "main",
+      "level": "medium",
+      "desc": "Jump onto a box and step down."
+    },
+    {
+      "id": "m_m8",
+      "name": "Plank with Shoulder Taps",
+      "type": "main",
+      "level": "medium",
+      "desc": "In plank, tap opposite shoulder."
+    },
+    {
+      "id": "m_m9",
+      "name": "Romanian Deadlift",
+      "type": "main",
+      "level": "medium",
+      "desc": "Hip hinge with dumbbells or barbell."
+    },
+    {
+      "id": "m_m10",
+      "name": "Mountain Climbers",
+      "type": "main",
+      "level": "medium",
+      "desc": "Alternating knee drives in plank position."
+    },
+    {
+      "id": "m_m11",
+      "name": "Dumbbell Shoulder Press",
+      "type": "main",
+      "level": "medium",
+      "desc": "Press dumbbells overhead while standing."
+    },
+    {
+      "id": "m_m12",
+      "name": "Bulgarian Split Squat",
+      "type": "main",
+      "level": "medium",
+      "desc": "Single leg squat with rear foot elevated."
+    },
+    {
+      "id": "m_m13",
+      "name": "Renegade Rows",
+      "type": "main",
+      "level": "medium",
+      "desc": "Plank position rows with dumbbells."
+    },
+    {
+      "id": "m_m14",
+      "name": "Jump Squats",
+      "type": "main",
+      "level": "medium",
+      "desc": "Explosive squat with jump at top."
+    },
+    {
+      "id": "m_m15",
+      "name": "Tricep Dips",
+      "type": "main",
+      "level": "medium",
+      "desc": "Dips on parallel bars."
+    },
+    {
+      "id": "m_m16",
+      "name": "Sumo Squats",
+      "type": "main",
+      "level": "medium",
+      "desc": "Wide stance squat targeting inner thighs."
+    },
+    {
+      "id": "m_m17",
+      "name": "Bent Over Rows",
+      "type": "main",
+      "level": "medium",
+      "desc": "Row barbell or dumbbells while bent over."
+    },
+    {
+      "id": "m_m18",
+      "name": "Side Plank",
+      "type": "main",
+      "level": "medium",
+      "desc": "Hold side plank position for 30 seconds each side."
+    },
+    {
+      "id": "m_m19",
+      "name": "Dumbbell Lunges",
+      "type": "main",
+      "level": "medium",
+      "desc": "Lunges while holding dumbbells."
+    },
+    {
+      "id": "m_m20",
+      "name": "Hollow Body Hold",
+      "type": "main",
+      "level": "medium",
+      "desc": "Core exercise with arms and legs extended."
+    },
+
+    {
+      "id": "m_h1",
+      "name": "Burpees",
+      "type": "main",
+      "level": "hard",
+      "desc": "Down, up, jump. Maximum tempo."
+    },
+    {
+      "id": "m_h2",
+      "name": "Diamond Push-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Push-ups with hands in diamond position."
+    },
+    {
+      "id": "m_h3",
+      "name": "Pistol Squats",
+      "type": "main",
+      "level": "hard",
+      "desc": "Single-leg squat requiring balance and strength."
+    },
+    {
+      "id": "m_h4",
+      "name": "Man Maker",
+      "type": "main",
+      "level": "hard",
+      "desc": "Push-up, dumbbell row, and overhead press combo."
+    },
+    {
+      "id": "m_h5",
+      "name": "Muscle-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Pull-up transitioning to dip on bar."
+    },
+    {
+      "id": "m_h6",
+      "name": "Handstand Push-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Push-ups while in handstand against wall."
+    },
+    {
+      "id": "m_h7",
+      "name": "Dragon Flags",
+      "type": "main",
+      "level": "hard",
+      "desc": "Lower and raise body while holding bench."
+    },
+    {
+      "id": "m_h8",
+      "name": "Plyometric Push-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Explosive push-ups with hands leaving ground."
+    },
+    {
+      "id": "m_h9",
+      "name": "L-Sit",
+      "type": "main",
+      "level": "hard",
+      "desc": "Hold L position on parallettes or floor."
+    },
+    {
+      "id": "m_h10",
+      "name": "Turkish Get-up",
+      "type": "main",
+      "level": "hard",
+      "desc": "Complex movement from lying to standing with weight."
+    },
+    {
+      "id": "m_h11",
+      "name": "Box Jump Burpees",
+      "type": "main",
+      "level": "hard",
+      "desc": "Burpee followed by box jump."
+    },
+    {
+      "id": "m_h12",
+      "name": "One-Arm Push-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Push-up on single arm."
+    },
+    {
+      "id": "m_h13",
+      "name": "Archer Push-ups",
+      "type": "main",
+      "level": "hard",
+      "desc": "Wide push-up shifting weight side to side."
+    },
+    {
+      "id": "m_h14",
+      "name": "Jumping Lunges",
+      "type": "main",
+      "level": "hard",
+      "desc": "Explosive alternating lunges with jump."
+    },
+    {
+      "id": "m_h15",
+      "name": "Toes to Bar",
+      "type": "main",
+      "level": "hard",
+      "desc": "Hanging leg raise to touch bar with toes."
+    },
+    {
+      "id": "m_h16",
+      "name": "Clean and Jerk",
+      "type": "main",
+      "level": "hard",
+      "desc": "Olympic lift from floor to overhead."
+    },
+    {
+      "id": "m_h17",
+      "name": "Snatch",
+      "type": "main",
+      "level": "hard",
+      "desc": "Olympic lift in one motion to overhead."
+    },
+    {
+      "id": "m_h18",
+      "name": "Wall Balls",
+      "type": "main",
+      "level": "hard",
+      "desc": "Squat and throw medicine ball to wall target."
+    },
+    {
+      "id": "m_h19",
+      "name": "Thrusters",
+      "type": "main",
+      "level": "hard",
+      "desc": "Front squat to overhead press in one movement."
+    },
+    {
+      "id": "m_h20",
+      "name": "Devil Press",
+      "type": "main",
+      "level": "hard",
+      "desc": "Burpee with dumbbell snatch at top."
+    },
+
+    {
+      "id": "c1",
+      "name": "Child's Pose",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Back relaxation stretch on mat."
+    },
+    {
+      "id": "c2",
+      "name": "Couch Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Quad stretch against wall."
+    },
+    {
+      "id": "c3",
+      "name": "Bar Hang",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Dead hang for spinal decompression."
+    },
+    {
+      "id": "c4",
+      "name": "Pigeon Pose",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Deep hip flexor and glute stretch."
+    },
+    {
+      "id": "c5",
+      "name": "Seated Forward Fold",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Hamstring stretch while seated."
+    },
+    {
+      "id": "c6",
+      "name": "Figure Four Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Glute stretch lying on back."
+    },
+    {
+      "id": "c7",
+      "name": "Cat-Cow",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Gentle spine mobility exercise."
+    },
+    {
+      "id": "c8",
+      "name": "Thread the Needle",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Thoracic rotation stretch."
+    },
+    {
+      "id": "c9",
+      "name": "Lying Spinal Twist",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Gentle rotation stretch for spine."
+    },
+    {
+      "id": "c10",
+      "name": "Standing Quad Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Stand on one leg, pull heel to glute."
+    },
+    {
+      "id": "c11",
+      "name": "Standing Hamstring Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Foot on elevated surface, lean forward."
+    },
+    {
+      "id": "c12",
+      "name": "Chest Doorway Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Open chest using doorframe."
+    },
+    {
+      "id": "c13",
+      "name": "Tricep Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Reach behind head, pull elbow."
+    },
+    {
+      "id": "c14",
+      "name": "Cross-Body Shoulder Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Pull arm across body."
+    },
+    {
+      "id": "c15",
+      "name": "Hip Flexor Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Kneeling lunge position stretch."
+    },
+    {
+      "id": "c16",
+      "name": "Butterfly Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Seated with soles together, knees out."
+    },
+    {
+      "id": "c17",
+      "name": "Cobra Stretch",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Lie prone, push chest up."
+    },
+    {
+      "id": "c18",
+      "name": "Foam Rolling - Quads",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Roll out quad muscles on foam roller."
+    },
+    {
+      "id": "c19",
+      "name": "Foam Rolling - Back",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "Roll out upper and lower back."
+    },
+    {
+      "id": "c20",
+      "name": "Deep Breathing",
+      "type": "cooldown",
+      "level": "easy",
+      "desc": "5 minutes of controlled breathing for recovery."
+    }
+  ]
+}
