@@ -5,6 +5,7 @@ import ChatInterface from './components/ChatInterface';
 import SavedWorkouts from './components/SavedWorkouts';
 import ClientsManager from './components/ClientsManager';
 import { AppView, SavedWorkout, Client } from './types';
+import * as api from './backendService';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.CHAT);
@@ -14,13 +15,17 @@ const App: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
   const [sharedWorkout, setSharedWorkout] = useState<SavedWorkout | null>(null);
 
-  // Load data from localStorage on mount
+  // Load data from backend on mount
   useEffect(() => {
-    const storedWorkouts = localStorage.getItem('fitcoach_saved');
-    if (storedWorkouts) setSavedItems(JSON.parse(storedWorkouts));
-
-    const storedClients = localStorage.getItem('fitcoach_clients');
-    if (storedClients) setClients(JSON.parse(storedClients));
+    const loadData = async () => {
+      const [workouts, clientsData] = await Promise.all([
+        api.getWorkouts(),
+        api.getClients()
+      ]);
+      setSavedItems(workouts);
+      setClients(clientsData);
+    };
+    loadData();
 
     const params = new URLSearchParams(window.location.search);
     const shareId = params.get('share');
@@ -32,14 +37,6 @@ const App: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('fitcoach_saved', JSON.stringify(savedItems));
-  }, [savedItems]);
-
-  useEffect(() => {
-    localStorage.setItem('fitcoach_clients', JSON.stringify(clients));
-  }, [clients]);
-
   const showToast = (message: string) => {
     setToast({ message, visible: true });
     setTimeout(() => {
@@ -47,7 +44,7 @@ const App: React.FC = () => {
     }, 3000);
   };
 
-  const handleSaveWorkout = (title: string, content: string) => {
+  const handleSaveWorkout = async (title: string, content: string) => {
     const newItem: SavedWorkout = {
       id: Date.now().toString(),
       title,
@@ -55,6 +52,7 @@ const App: React.FC = () => {
       date: new Date().toLocaleDateString('pl-PL'),
       color: '#3b82f6'
     };
+    await api.addWorkout(newItem);
     setSavedItems(prev => [newItem, ...prev]);
     showToast("Plan został zapisany!");
   };
@@ -64,22 +62,26 @@ const App: React.FC = () => {
     showToast("Zmiany zapisane.");
   };
 
-  const handleDeleteSaved = (id: string) => {
+  const handleDeleteSaved = async (id: string) => {
+    await api.deleteWorkout(id);
     setSavedItems(prev => prev.filter(item => item.id !== id));
     showToast("Plan usunięty.");
   };
 
-  const handleAddClient = (client: Client) => {
+  const handleAddClient = async (client: Client) => {
+    await api.addClient(client);
     setClients(prev => [client, ...prev]);
     showToast("Dodano podopiecznego.");
   };
 
-  const handleUpdateClient = (updatedClient: Client) => {
+  const handleUpdateClient = async (updatedClient: Client) => {
+    await api.updateClient(updatedClient);
     setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
     showToast("Dane zaktualizowane.");
   };
 
-  const handleDeleteClient = (id: string) => {
+  const handleDeleteClient = async (id: string) => {
+    await api.deleteClient(id);
     setClients(prev => prev.filter(c => c.id !== id));
     showToast("Usunięto z bazy.");
   };
@@ -167,11 +169,11 @@ const App: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
                     <span className="text-sm font-bold text-slate-300">Wersja Silnika</span>
-                    <span className="text-xs font-black text-blue-400 uppercase">Gemini 3 Pro</span>
+                    <span className="text-xs font-black text-blue-400 uppercase">Ollama + RAG</span>
                   </div>
                   <div className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
                     <span className="text-sm font-bold text-slate-300">Przechowywanie</span>
-                    <span className="text-xs font-black text-green-500 uppercase">Local Secure</span>
+                    <span className="text-xs font-black text-green-500 uppercase">Backend API</span>
                   </div>
                 </div>
               </div>
