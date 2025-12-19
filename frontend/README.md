@@ -1,69 +1,20 @@
-# TrenerAI Flutter Frontend
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Mobile/web app for the TrenerAI training plan generator.
+# Run and deploy your AI Studio app
 
-## Setup
+This contains everything you need to run your app locally.
 
-1. Install Flutter SDK: https://flutter.dev/docs/get-started/install
+View your app in AI Studio: https://ai.studio/apps/drive/1BnUstD8GB06zm86hzQE5zzfvFRW4Db0e
 
-2. **Initialize platform files** (required first time):
-```bash
-cd frontend
-flutter create . --project-name trener_ai
-```
-This generates platform-specific folders (web/, android/, ios/, etc.)
+## Run Locally
 
-3. Get dependencies:
-```bash
-flutter pub get
-```
+**Prerequisites:**  Node.js
 
-4. Run the app:
-```bash
-# Web
-flutter run -d chrome
 
-# Android (with emulator running)
-flutter run -d android
-
-# iOS (macOS only)
-flutter run -d ios
-```
-
-## Backend Connection
-
-The app automatically detects the correct backend URL:
-- **Web**: `http://localhost:8000`
-- **Android Emulator**: `http://10.0.2.2:8000`
-- **iOS/Desktop**: `http://localhost:8000`
-
-Make sure the backend is running before using the app.
-
-## Building
-
-```bash
-# Web
-flutter build web
-
-# Android APK
-flutter build apk
-
-# iOS
-flutter build ios
-```
-
-## Troubleshooting
-
-### "This application is not configured to build on the web"
-Run `flutter create . --project-name trener_ai` to generate platform files.
-
-### Shader compilation errors
-This is a known Flutter issue. Try:
-```bash
-flutter clean
-flutter pub get
-flutter run -d chrome
-```
-
-### CORS errors in browser
-Make sure the backend has CORS enabled (it does by default).
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

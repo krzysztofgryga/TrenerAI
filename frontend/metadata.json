@@ -1,0 +1,7 @@
+{
+  "name": "FitCoach AI - Twój Osobisty Trener",
+  "description": "Zaawansowana aplikacja dla trenerów i entuzjastów fitnessu, umożliwiająca generowanie spersonalizowanych planów treningowych, diet oraz eksport do PDF przy użyciu sztucznej inteligencji Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
