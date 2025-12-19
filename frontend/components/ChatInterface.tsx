@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Message } from '../types';
-import { getGeminiResponse } from '../geminiService';
+import { getChatResponse } from '../backendService';
 
 interface ChatInterfaceProps {
   onSaveWorkout: (title: string, content: string) => void;
@@ -81,10 +81,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
 
     const history = messages.slice(-6).map(m => ({
       role: m.role,
-      parts: [{ text: m.content }]
+      content: m.content
     }));
 
-    const responseText = await getGeminiResponse(input, history);
+    const responseText = await getChatResponse(input, history);
     
     setMessages(prev => [...prev, {
       id: (Date.now() + 1).toString(),
