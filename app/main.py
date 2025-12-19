@@ -14,10 +14,14 @@ Usage:
     uvicorn app.main:app --reload
 """
 
+import json
 import logging
 import os
+import re
 import traceback
+from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Annotated, List, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -35,6 +39,41 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# =============================================================================
+# Client Storage
+# =============================================================================
+
+DATA_DIR = Path(__file__).parent.parent / "data"
+CLIENTS_FILE = DATA_DIR / "clients.json"
+WORKOUTS_FILE = DATA_DIR / "workouts.json"
+
+
+def load_clients() -> List[dict]:
+    if not CLIENTS_FILE.exists():
+        return []
+    with open(CLIENTS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_clients(clients: List[dict]):
+    DATA_DIR.mkdir(exist_ok=True)
+    with open(CLIENTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(clients, f, ensure_ascii=False, indent=2)
+
+
+def load_workouts() -> List[dict]:
+    if not WORKOUTS_FILE.exists():
+        return []
+    with open(WORKOUTS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_workouts(workouts: List[dict]):
+    DATA_DIR.mkdir(exist_ok=True)
+    with open(WORKOUTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(workouts, f, ensure_ascii=False, indent=2)
+
 
 # =============================================================================
 # FastAPI Application
@@ -143,6 +182,34 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: Optional[List[ChatMessage]] = []
+
+
+class ProgressEntry(BaseModel):
+    id: str
+    date: str
+    weight: float
+    bodyFat: Optional[float] = None
+    waist: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class Client(BaseModel):
+    id: str
+    name: str
+    age: int
+    weight: float
+    goal: str
+    notes: str = ""
+    createdAt: str
+    progress: List[ProgressEntry] = []
+
+
+class SavedWorkout(BaseModel):
+    id: str
+    clientId: Optional[str] = None
+    title: str
+    content: str
+    date: str
 
 
 # =============================================================================
@@ -262,14 +329,227 @@ async def generate_training(request: TrainingRequest) -> dict:
         )
 
 
+# =============================================================================
+# Client CRUD Endpoints
+# =============================================================================
+
+@app.get("/clients")
+def get_clients() -> List[dict]:
+    return load_clients()
+
+
+@app.post("/clients")
+def add_client(client: Client) -> dict:
+    clients = load_clients()
+    clients.append(client.model_dump())
+    save_clients(clients)
+    return {"status": "ok", "client": client.model_dump()}
+
+
+@app.put("/clients/{client_id}")
+def update_client(client_id: str, client: Client) -> dict:
+    clients = load_clients()
+    for i, c in enumerate(clients):
+        if c["id"] == client_id:
+            clients[i] = client.model_dump()
+            save_clients(clients)
+            return {"status": "ok", "client": client.model_dump()}
+    raise HTTPException(status_code=404, detail="Client not found")
+
+
+@app.delete("/clients/{client_id}")
+def delete_client(client_id: str) -> dict:
+    clients = load_clients()
+    clients = [c for c in clients if c["id"] != client_id]
+    save_clients(clients)
+    return {"status": "ok"}
+
+
+# =============================================================================
+# Workout CRUD Endpoints
+# =============================================================================
+
+@app.get("/workouts")
+def get_workouts() -> List[dict]:
+    return load_workouts()
+
+
+@app.post("/workouts")
+def add_workout(workout: SavedWorkout) -> dict:
+    workouts = load_workouts()
+    workouts.append(workout.model_dump())
+    save_workouts(workouts)
+    return {"status": "ok", "workout": workout.model_dump()}
+
+
+@app.delete("/workouts/{workout_id}")
+def delete_workout(workout_id: str) -> dict:
+    workouts = load_workouts()
+    workouts = [w for w in workouts if w["id"] != workout_id]
+    save_workouts(workouts)
+    return {"status": "ok"}
+
+
+# =============================================================================
+# Chat Command Parser
+# =============================================================================
+
+def parse_chat_command(message: str) -> Optional[dict]:
+    """Parse chat message for client management commands."""
+    msg = message.lower().strip()
+
+    # List clients
+    if any(x in msg for x in ["lista klientów", "pokaż klientów", "wszyscy podopieczni", "lista podopiecznych", "pokaż podopiecznych"]):
+        return {"action": "list_clients"}
+
+    # Show client details
+    match = re.search(r"(?:pokaż|dane|info|szczegóły)\s+(?:klienta|podopiecznego)?\s*[:\-]?\s*(.+)", msg)
+    if match:
+        return {"action": "show_client", "name": match.group(1).strip()}
+
+    # Add client: "dodaj klienta: Jan Kowalski, 30 lat, 80kg, cel: schudnąć"
+    match = re.search(r"dodaj\s+(?:klienta|podopiecznego)\s*[:\-]?\s*(.+)", msg, re.IGNORECASE)
+    if match:
+        data = match.group(1)
+        return {"action": "add_client", "data": data}
+
+    # Delete client
+    match = re.search(r"(?:usuń|usun|skasuj)\s+(?:klienta|podopiecznego)\s*[:\-]?\s*(.+)", msg)
+    if match:
+        return {"action": "delete_client", "name": match.group(1).strip()}
+
+    # Show client workouts
+    match = re.search(r"(?:treningi|plany)\s+(?:dla|klienta|podopiecznego)?\s*[:\-]?\s*(.+)", msg)
+    if match:
+        return {"action": "show_workouts", "name": match.group(1).strip()}
+
+    return None
+
+
+def execute_chat_command(cmd: dict) -> str:
+    """Execute parsed chat command and return response."""
+    action = cmd["action"]
+
+    if action == "list_clients":
+        clients = load_clients()
+        if not clients:
+            return "# BAZA PODOPIECZNYCH\n\nBrak zarejestrowanych podopiecznych. Użyj komendy:\n`dodaj klienta: Imię Nazwisko, wiek lat, wagakg, cel: opis celu`"
+
+        result = "# BAZA PODOPIECZNYCH\n\n| Imię | Wiek | Waga | Cel |\n|---|---|---|---|\n"
+        for c in clients:
+            result += f"| {c['name']} | {c['age']} | {c['weight']}kg | {c['goal']} |\n"
+        return result
+
+    elif action == "show_client":
+        name = cmd["name"]
+        clients = load_clients()
+        client = next((c for c in clients if name.lower() in c["name"].lower()), None)
+        if not client:
+            return f"# BŁĄD\n\nNie znaleziono podopiecznego: **{name}**"
+
+        result = f"# PROFIL: {client['name'].upper()}\n\n"
+        result += f"## Dane podstawowe\n"
+        result += f"| Parametr | Wartość |\n|---|---|\n"
+        result += f"| Wiek | {client['age']} lat |\n"
+        result += f"| Waga | {client['weight']} kg |\n"
+        result += f"| Cel | {client['goal']} |\n"
+        if client.get('notes'):
+            result += f"\n## Notatki\n{client['notes']}\n"
+        if client.get('progress'):
+            result += f"\n## Historia pomiarów\n"
+            result += "| Data | Waga | Body Fat | Pas |\n|---|---|---|---|\n"
+            for p in client['progress'][-5:]:
+                result += f"| {p['date']} | {p['weight']}kg | {p.get('bodyFat', '-')}% | {p.get('waist', '-')}cm |\n"
+        return result
+
+    elif action == "add_client":
+        data = cmd["data"]
+        # Parse: "Jan Kowalski, 30 lat, 80kg, cel: schudnąć"
+        parts = [p.strip() for p in data.split(",")]
+        name = parts[0] if parts else "Nieznany"
+
+        age = 25
+        weight = 70.0
+        goal = "Poprawa kondycji"
+
+        for part in parts[1:]:
+            part_lower = part.lower()
+            if "lat" in part_lower:
+                match = re.search(r"(\d+)", part)
+                if match:
+                    age = int(match.group(1))
+            elif "kg" in part_lower:
+                match = re.search(r"(\d+(?:\.\d+)?)", part)
+                if match:
+                    weight = float(match.group(1))
+            elif "cel" in part_lower:
+                goal = part.split(":", 1)[-1].strip() if ":" in part else part
+
+        new_client = {
+            "id": str(int(datetime.now().timestamp() * 1000)),
+            "name": name,
+            "age": age,
+            "weight": weight,
+            "goal": goal,
+            "notes": "",
+            "createdAt": datetime.now().strftime("%d.%m.%Y"),
+            "progress": []
+        }
+
+        clients = load_clients()
+        clients.append(new_client)
+        save_clients(clients)
+
+        return f"# DODANO PODOPIECZNEGO\n\n✓ **{name}** został dodany do bazy.\n\n| Parametr | Wartość |\n|---|---|\n| Wiek | {age} lat |\n| Waga | {weight} kg |\n| Cel | {goal} |"
+
+    elif action == "delete_client":
+        name = cmd["name"]
+        clients = load_clients()
+        client = next((c for c in clients if name.lower() in c["name"].lower()), None)
+        if not client:
+            return f"# BŁĄD\n\nNie znaleziono podopiecznego: **{name}**"
+
+        clients = [c for c in clients if c["id"] != client["id"]]
+        save_clients(clients)
+        return f"# USUNIĘTO PODOPIECZNEGO\n\n✓ **{client['name']}** został usunięty z bazy."
+
+    elif action == "show_workouts":
+        name = cmd["name"]
+        clients = load_clients()
+        client = next((c for c in clients if name.lower() in c["name"].lower()), None)
+        if not client:
+            return f"# BŁĄD\n\nNie znaleziono podopiecznego: **{name}**"
+
+        workouts = load_workouts()
+        client_workouts = [w for w in workouts if w.get("clientId") == client["id"]]
+
+        if not client_workouts:
+            return f"# TRENINGI: {client['name'].upper()}\n\nBrak zapisanych treningów dla tego podopiecznego."
+
+        result = f"# TRENINGI: {client['name'].upper()}\n\n"
+        for w in client_workouts[-5:]:
+            result += f"## {w['title']} ({w['date']})\n{w['content'][:200]}...\n\n---\n"
+        return result
+
+    return None
+
+
 @app.post("/chat")
 async def chat(request: ChatRequest) -> dict:
     """
     Chat endpoint with RAG - retrieves exercises from Qdrant and generates response.
+    Also handles client management commands.
     """
     logger.info(f"Chat request: {request.message[:100]}...")
 
     try:
+        # Check for client management commands first
+        cmd = parse_chat_command(request.message)
+        if cmd:
+            response_text = execute_chat_command(cmd)
+            if response_text:
+                return {"response": response_text}
+
         # Build context from Qdrant
         context = ""
         if check_collection_exists():
