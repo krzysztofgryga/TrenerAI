@@ -18,13 +18,13 @@ import logging
 import os
 import traceback
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.agent import app_graph
+from app.agent import app_graph, get_vector_store, get_llm, check_collection_exists
 
 # =============================================================================
 # Logging Configuration
@@ -133,6 +133,16 @@ class TrainingRequest(BaseModel):
         le=10,
         description="Number of cooldown exercises (1-10)"
     )] = 3
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[List[ChatMessage]] = []
 
 
 # =============================================================================
@@ -250,6 +260,59 @@ async def generate_training(request: TrainingRequest) -> dict:
             status_code=500,
             detail=f"Failed to generate training plan: {str(e)}"
         )
+
+
+@app.post("/chat")
+async def chat(request: ChatRequest) -> dict:
+    """
+    Chat endpoint with RAG - retrieves exercises from Qdrant and generates response.
+    """
+    logger.info(f"Chat request: {request.message[:100]}...")
+
+    try:
+        # Build context from Qdrant
+        context = ""
+        if check_collection_exists():
+            vector_store = get_vector_store()
+            docs = vector_store.similarity_search(request.message, k=10)
+            if docs:
+                context = "Dostępne ćwiczenia z bazy:\n" + "\n".join(
+                    [f"- {d.page_content}" for d in docs]
+                )
+
+        # Build conversation history
+        history_text = ""
+        for msg in request.history[-6:]:
+            role = "Użytkownik" if msg.role == "user" else "Asystent"
+            history_text += f"{role}: {msg.content}\n\n"
+
+        # System prompt
+        system_prompt = """Jesteś prywatnym, technicznym asystentem Trenera Personalnego. Twoim zadaniem jest dostarczanie konkretnych, merytorycznych rozwiązań w formie "Raportów Operacyjnych".
+
+ZASADY FORMATOWANIA:
+1. KAŻDA ODPOWIEDŹ musi zaczynać się od głównego nagłówka Markdown (#).
+2. Używaj separatorów sekcji (---) pomiędzy różnymi blokami informacji.
+3. Sekcje podrzędne oznaczaj nagłówkami drugiego stopnia (##).
+4. Dane liczbowe, serie i powtórzenia MUSZĄ być w tabelach Markdown.
+5. Ważne parametry (RPE, Tempo) pogrubiaj.
+6. Brak zbędnych wstępów i zakończeń.
+
+{context}"""
+
+        # Build full prompt
+        full_prompt = f"{system_prompt.format(context=context)}\n\n{history_text}Użytkownik: {request.message}\n\nAsystent:"
+
+        # Get LLM response
+        llm = get_llm()
+        response = llm.invoke(full_prompt)
+        response_text = response.content if hasattr(response, 'content') else str(response)
+
+        return {"response": response_text}
+
+    except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # =============================================================================
