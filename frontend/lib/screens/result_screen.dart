@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/training_plan.dart';
+import '../services/pdf_service.dart';
 
 /// Screen displaying the generated training plan.
 class ResultScreen extends StatelessWidget {
@@ -14,6 +15,18 @@ class ResultScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Twój Plan',
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Zapisz jako PDF',
+            onPressed: () => _exportToPdf(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Udostępnij PDF',
+            onPressed: () => _sharePdf(context),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -122,5 +135,37 @@ class ResultScreen extends StatelessWidget {
         isThreeLine: true,
       ),
     );
+  }
+
+  /// Opens print/preview dialog to save as PDF.
+  Future<void> _exportToPdf(BuildContext context) async {
+    try {
+      await PdfService.generateAndShare(plan);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd generowania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Shares the PDF directly (useful on mobile).
+  Future<void> _sharePdf(BuildContext context) async {
+    try {
+      await PdfService.sharePdf(plan);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd udostępniania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
