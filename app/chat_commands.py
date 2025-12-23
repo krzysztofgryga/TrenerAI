@@ -168,8 +168,12 @@ COMMAND_PATTERNS: List[Tuple[str, CommandType, callable]] = [
     # Help
     (r'^(?:pomoc|help|komendy|commands|\?)$', CommandType.HELP, lambda m: {}),
 
-    # Create user - various forms
+    # Create user - with keyword (podopiecznego, klienta)
     (r'(?:dodaj|utwórz|stwórz|nowy|add|create)\s+(?:podopieczn\w*|klient\w*|użytkownik\w*|user\w*)[\s:]*(.+)',
+     CommandType.CREATE_USER, lambda m: parse_user_data(m.group(1))),
+
+    # Create user - simple form: "dodaj Jana 30 lat" (name starts with capital)
+    (r'(?:dodaj|utwórz|nowy)\s+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)?(?:[\s,].+)?)',
      CommandType.CREATE_USER, lambda m: parse_user_data(m.group(1))),
 
     # List users
