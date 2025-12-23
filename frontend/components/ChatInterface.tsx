@@ -99,7 +99,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
 
     const history = messages.slice(-10).map(m => ({
       role: m.role,
-      parts: [{ text: m.content }]
+      content: m.content
     }));
 
     const responseText = await getChatResponse(input, history);
