@@ -225,6 +225,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: Optional[List[ChatMessage]] = []
+    session_id: Optional[str] = "default"  # For tracking pending confirmations
 
 
 class ProgressEntry(BaseModel):
@@ -839,98 +840,132 @@ def execute_chat_command(cmd: dict) -> str:
 @app.post("/chat")
 async def chat(request: ChatRequest) -> dict:
     """
-    Chat endpoint with Intent Parser + RAG.
+    Chat endpoint with deterministic command parsing.
 
     Flow:
-    1. Parse intent from message
-    2. If command intent → execute command
-    3. If general chat → use RAG for response
+    1. Check if message is confirmation (tak/anuluj)
+    2. Parse command with regex (NO LLM)
+    3. Execute command (direct DB operation)
+    4. If no command → use RAG for general questions
     """
     logger.info(f"Chat request: {request.message[:100]}...")
+    session_id = request.session_id or "default"
 
     try:
-        # Import Intent Parser and Command Executor
-        from app.intent_parser import get_intent_parser, IntentType
-        from app.command_executor import get_command_executor
+        from app.chat_commands import (
+            is_confirmation, parse_command, CommandType,
+            CommandExecutor, get_pending_action, clear_pending_action
+        )
 
-        # Parse intent
-        parser = get_intent_parser()
-        history = [{"role": m.role, "content": m.content} for m in request.history] if request.history else []
-        parsed_intent = parser.parse(request.message, history)
+        # Get DB session
+        db_session = None
+        if DB_AVAILABLE:
+            from app.database import SessionLocal
+            db_session = SessionLocal()
 
-        logger.info(f"Parsed intent: {parsed_intent.intent} (confidence: {parsed_intent.confidence})")
+        try:
+            executor = CommandExecutor(db_session)
 
-        # Handle command intents
-        if parsed_intent.intent != IntentType.GENERAL_CHAT and parsed_intent.confidence > 0.5:
-            # Get DB session if available
-            db_session = None
-            if DB_AVAILABLE:
-                from app.database import SessionLocal
-                db_session = SessionLocal()
+            # ================================================================
+            # STEP 1: Check for confirmation (tak/anuluj)
+            # ================================================================
+            confirmation = is_confirmation(request.message)
 
-            try:
-                executor = get_command_executor(db_session)
-                result = executor.execute(parsed_intent)
-
-                if result.success or result.follow_up_question:
-                    response_text = result.message
-                    if result.follow_up_question:
-                        response_text = result.follow_up_question
-
+            if confirmation is True:
+                # User confirmed - execute pending action
+                pending = get_pending_action(session_id)
+                if pending:
+                    result = executor.execute_pending(session_id)
                     return {
-                        "response": response_text,
-                        "intent": parsed_intent.intent.value,
+                        "response": result.message,
+                        "command": pending.command,
                         "data": result.data
                     }
-            finally:
-                if db_session:
-                    db_session.close()
+                else:
+                    return {"response": "Nie mam nic do potwierdzenia."}
 
-        # Fallback: Legacy command parser (for backward compatibility)
-        cmd = parse_chat_command(request.message)
-        if cmd:
-            response_text = execute_chat_command(cmd)
-            if response_text:
-                return {"response": response_text}
+            elif confirmation is False:
+                # User cancelled
+                clear_pending_action(session_id)
+                return {"response": "Anulowano."}
 
-        # General chat with RAG
-        context = ""
-        if check_collection_exists():
-            vector_store = get_vector_store()
-            docs = vector_store.similarity_search(request.message, k=10)
-            if docs:
-                context = "Dostępne ćwiczenia z bazy:\n" + "\n".join(
-                    [f"- {d.page_content}" for d in docs]
-                )
+            # ================================================================
+            # STEP 2: Parse command with regex (NO LLM!)
+            # ================================================================
+            parsed = parse_command(request.message)
 
-        # Build conversation history
-        history_text = ""
-        for msg in request.history[-6:]:
-            role = "Użytkownik" if msg.role == "user" else "Asystent"
-            history_text += f"{role}: {msg.content}\n\n"
+            if parsed.command != CommandType.NONE:
+                logger.info(f"Parsed command: {parsed.command.value}")
 
-        # System prompt
-        system_prompt = """Jesteś prywatnym, technicznym asystentem Trenera Personalnego. Twoim zadaniem jest dostarczanie konkretnych, merytorycznych rozwiązań w formie "Raportów Operacyjnych".
+                result = executor.execute(parsed, session_id)
 
-ZASADY FORMATOWANIA:
-1. KAŻDA ODPOWIEDŹ musi zaczynać się od głównego nagłówka Markdown (#).
-2. Używaj separatorów sekcji (---) pomiędzy różnymi blokami informacji.
-3. Sekcje podrzędne oznaczaj nagłówkami drugiego stopnia (##).
-4. Dane liczbowe, serie i powtórzenia MUSZĄ być w tabelach Markdown.
-5. Ważne parametry (RPE, Tempo) pogrubiaj.
-6. Brak zbędnych wstępów i zakończeń.
+                # Special case: CREATE_TRAINING needs LangGraph
+                if result.data and result.data.get("use_langgraph"):
+                    # Use LangGraph for training generation
+                    params = result.data.get("params", {})
+                    inputs = {
+                        "num_people": params.get("num_people", 1),
+                        "difficulty": params.get("difficulty", "medium"),
+                        "rest_time": 60,
+                        "mode": params.get("mode", "circuit"),
+                        "warmup_count": 3,
+                        "main_count": 5,
+                        "cooldown_count": 3
+                    }
+
+                    try:
+                        plan_result = app_graph.invoke(inputs)
+                        plan = plan_result.get("final_plan", {})
+                        return {
+                            "response": f"**Plan treningowy wygenerowany!**\n\n*(szczegóły w data)*",
+                            "command": "CREATE_TRAINING",
+                            "data": {"plan": plan, "params": inputs}
+                        }
+                    except Exception as e:
+                        return {"response": f"Błąd generowania planu: {e}"}
+
+                return {
+                    "response": result.message,
+                    "command": parsed.command.value if result.success else None,
+                    "data": result.data,
+                    "needs_confirmation": result.needs_confirmation
+                }
+
+            # ================================================================
+            # STEP 3: No command found → RAG for general questions
+            # ================================================================
+            context = ""
+            if check_collection_exists():
+                vector_store = get_vector_store()
+                docs = vector_store.similarity_search(request.message, k=10)
+                if docs:
+                    context = "Dostępne ćwiczenia z bazy:\n" + "\n".join(
+                        [f"- {d.page_content}" for d in docs]
+                    )
+
+            # Build conversation history
+            history_text = ""
+            for msg in (request.history or [])[-6:]:
+                role = "Użytkownik" if msg.role == "user" else "Asystent"
+                history_text += f"{role}: {msg.content}\n\n"
+
+            # System prompt for general questions
+            system_prompt = """Jesteś asystentem trenera personalnego. Odpowiadaj krótko i konkretnie.
+Używaj formatowania Markdown. Nie wymyślaj danych - używaj tylko tego co wiesz.
 
 {context}"""
 
-        # Build full prompt
-        full_prompt = f"{system_prompt.format(context=context)}\n\n{history_text}Użytkownik: {request.message}\n\nAsystent:"
+            full_prompt = f"{system_prompt.format(context=context)}\n\n{history_text}Użytkownik: {request.message}\n\nAsystent:"
 
-        # Get LLM response
-        llm = get_llm()
-        response = llm.invoke(full_prompt)
-        response_text = response.content if hasattr(response, 'content') else str(response)
+            llm = get_llm()
+            response = llm.invoke(full_prompt)
+            response_text = response.content if hasattr(response, 'content') else str(response)
 
-        return {"response": response_text}
+            return {"response": response_text}
+
+        finally:
+            if db_session:
+                db_session.close()
 
     except Exception as e:
         logger.error(f"Chat error: {str(e)}")
