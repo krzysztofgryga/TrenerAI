@@ -24,11 +24,26 @@ from enum import Enum
 from pathlib import Path
 from typing import Annotated, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from app.agent import app_graph, get_vector_store, get_llm, check_collection_exists
+
+# Database imports
+try:
+    from app.database import (
+        get_db, init_db,
+        User as DBUser,
+        GeneratedTraining,
+        Feedback as DBFeedback,
+        DifficultyLevel
+    )
+    DB_AVAILABLE = True
+except ImportError:
+    DB_AVAILABLE = False
+    logging.warning("Database module not available. Running without persistence.")
 
 # =============================================================================
 # Logging Configuration
@@ -213,6 +228,89 @@ class SavedWorkout(BaseModel):
 
 
 # =============================================================================
+# Database Request/Response Models
+# =============================================================================
+
+class UserCreate(BaseModel):
+    """Create a new user."""
+    email: str
+    name: Optional[str] = None
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    goals: Optional[str] = None
+    contraindications: Optional[List[str]] = None
+    preferred_difficulty: Optional[str] = "medium"
+
+
+class UserResponse(BaseModel):
+    """User response model."""
+    id: int
+    email: str
+    name: Optional[str]
+    age: Optional[int]
+    weight: Optional[float]
+    height: Optional[float]
+    goals: Optional[str]
+    preferred_difficulty: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TrainingHistoryResponse(BaseModel):
+    """Training history entry."""
+    id: int
+    input_params: dict
+    plan: dict
+    model_name: Optional[str]
+    prompt_version: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class FeedbackCreate(BaseModel):
+    """Create feedback for a training."""
+    training_id: int
+    rating: int = Field(ge=1, le=5, description="Rating 1-5")
+    comment: Optional[str] = None
+    was_too_hard: bool = False
+    was_too_easy: bool = False
+    exercises_liked: Optional[List[str]] = None
+    exercises_disliked: Optional[List[str]] = None
+
+
+class FeedbackResponse(BaseModel):
+    """Feedback response model."""
+    id: int
+    training_id: int
+    rating: int
+    comment: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# =============================================================================
+# Application Startup
+# =============================================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup."""
+    if DB_AVAILABLE:
+        try:
+            init_db()
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.warning(f"Database initialization failed: {e}. Running without DB.")
+
+
+# =============================================================================
 # API Endpoints
 # =============================================================================
 
@@ -388,6 +486,200 @@ def delete_workout(workout_id: str) -> dict:
     workouts = [w for w in workouts if w["id"] != workout_id]
     save_workouts(workouts)
     return {"status": "ok"}
+
+
+# =============================================================================
+# Database User Endpoints (Postgres)
+# =============================================================================
+
+@app.post("/api/users", response_model=UserResponse, tags=["Database"])
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    """Create a new user in the database."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    # Check if email already exists
+    existing = db.query(DBUser).filter(DBUser.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Map difficulty string to enum
+    difficulty = DifficultyLevel.MEDIUM
+    if user.preferred_difficulty:
+        difficulty = DifficultyLevel(user.preferred_difficulty.upper())
+
+    db_user = DBUser(
+        email=user.email,
+        name=user.name,
+        age=user.age,
+        weight=user.weight,
+        height=user.height,
+        goals=user.goals,
+        contraindications=user.contraindications,
+        preferred_difficulty=difficulty
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+
+@app.get("/api/users/{user_id}", response_model=UserResponse, tags=["Database"])
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    """Get user by ID."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    user = db.query(DBUser).filter(DBUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.get("/api/users", response_model=List[UserResponse], tags=["Database"])
+def list_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """List all users."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    users = db.query(DBUser).offset(skip).limit(limit).all()
+    return users
+
+
+# =============================================================================
+# Training History Endpoints (Postgres)
+# =============================================================================
+
+@app.post("/api/trainings", tags=["Database"])
+def save_training(
+    request: TrainingRequest,
+    user_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and save a training plan to database.
+    Like /generate-training but persists the result.
+    """
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    logger.info(f"Generating and saving training for user_id={user_id}")
+
+    try:
+        inputs = {
+            "num_people": request.num_people,
+            "difficulty": request.difficulty.value,
+            "rest_time": request.rest_time,
+            "mode": request.mode.value,
+            "warmup_count": request.warmup_count,
+            "main_count": request.main_count,
+            "cooldown_count": request.cooldown_count
+        }
+
+        result = app_graph.invoke(inputs)
+        plan = result["final_plan"]
+
+        # Save to database
+        db_training = GeneratedTraining(
+            user_id=user_id,
+            input_params=inputs,
+            plan=plan,
+            model_name=os.getenv("LLM_MODEL", "unknown"),
+            prompt_version="v1.0",
+            retrieved_exercises=result.get("retrieved_exercises", [])
+        )
+        db.add(db_training)
+        db.commit()
+        db.refresh(db_training)
+
+        logger.info(f"Training saved with id={db_training.id}")
+
+        return {
+            "training_id": db_training.id,
+            "plan": plan
+        }
+
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/trainings/{training_id}", response_model=TrainingHistoryResponse, tags=["Database"])
+def get_training(training_id: int, db: Session = Depends(get_db)):
+    """Get a specific training by ID."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    training = db.query(GeneratedTraining).filter(GeneratedTraining.id == training_id).first()
+    if not training:
+        raise HTTPException(status_code=404, detail="Training not found")
+    return training
+
+
+@app.get("/api/users/{user_id}/trainings", response_model=List[TrainingHistoryResponse], tags=["Database"])
+def get_user_trainings(user_id: int, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    """Get all trainings for a user."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    trainings = db.query(GeneratedTraining)\
+        .filter(GeneratedTraining.user_id == user_id)\
+        .order_by(GeneratedTraining.created_at.desc())\
+        .offset(skip).limit(limit).all()
+    return trainings
+
+
+# =============================================================================
+# Feedback Endpoints (Postgres)
+# =============================================================================
+
+@app.post("/api/feedback", response_model=FeedbackResponse, tags=["Database"])
+def create_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db)):
+    """Submit feedback for a training."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    # Check training exists
+    training = db.query(GeneratedTraining).filter(
+        GeneratedTraining.id == feedback.training_id
+    ).first()
+    if not training:
+        raise HTTPException(status_code=404, detail="Training not found")
+
+    # Check if feedback already exists
+    existing = db.query(DBFeedback).filter(
+        DBFeedback.training_id == feedback.training_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Feedback already exists for this training")
+
+    db_feedback = DBFeedback(
+        training_id=feedback.training_id,
+        rating=feedback.rating,
+        comment=feedback.comment,
+        was_too_hard=1 if feedback.was_too_hard else 0,
+        was_too_easy=1 if feedback.was_too_easy else 0,
+        exercises_liked=feedback.exercises_liked,
+        exercises_disliked=feedback.exercises_disliked
+    )
+    db.add(db_feedback)
+    db.commit()
+    db.refresh(db_feedback)
+
+    return db_feedback
+
+
+@app.get("/api/feedback/{training_id}", response_model=FeedbackResponse, tags=["Database"])
+def get_feedback(training_id: int, db: Session = Depends(get_db)):
+    """Get feedback for a training."""
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    feedback = db.query(DBFeedback).filter(DBFeedback.training_id == training_id).first()
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    return feedback
 
 
 # =============================================================================
