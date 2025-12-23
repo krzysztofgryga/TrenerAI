@@ -34,9 +34,20 @@ export interface Client {
   progress: ProgressEntry[];
 }
 
+export interface CalendarEvent {
+  id: string;
+  clientId: string;
+  title: string;
+  date: string;
+  time: string;
+  type: 'training' | 'measurement' | 'consultation';
+  notes?: string;
+}
+
 export enum AppView {
   CHAT = 'chat',
   SAVED = 'saved',
   CLIENTS = 'clients',
+  CALENDAR = 'calendar',
   SETTINGS = 'settings'
 }

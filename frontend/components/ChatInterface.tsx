@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import { marked } from 'marked';
 import { Message } from '../types';
 import { getChatResponse } from '../backendService';
 
@@ -12,15 +12,21 @@ interface IWindow extends Window {
   webkitSpeechRecognition?: any;
 }
 
+const STORAGE_KEY = 'fitcoach_chat_history';
+const INITIAL_MESSAGE: Message = {
+  id: '1',
+  role: 'model',
+  content: '# SYSTEM GOTOWY\nWprowadź zapytanie dotyczące planu treningowego lub analizy danych.',
+  timestamp: Date.now()
+};
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'model',
-      content: '# SYSTEM GOTOWY\nWprowadź zapytanie dotyczące planu treningowego lub analizy danych.',
-      timestamp: Date.now()
-    }
-  ]);
+  // Load messages from localStorage or use the initial message
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [INITIAL_MESSAGE];
+  });
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -31,9 +37,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    scrollToBottom();
+  }, [messages]);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [isLoading]);
 
   useEffect(() => {
     const SpeechRecognition = (window as IWindow).SpeechRecognition || (window as IWindow).webkitSpeechRecognition;
@@ -49,6 +61,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
       recognitionRef.current.onerror = () => setIsListening(false);
       recognitionRef.current.onend = () => setIsListening(false);
     }
+    
+    // Configure marked options
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+    });
   }, []);
 
   const toggleListening = () => {
@@ -79,9 +97,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
     setInput('');
     setIsLoading(true);
 
-    const history = messages.slice(-6).map(m => ({
+    const history = messages.slice(-10).map(m => ({
       role: m.role,
-      content: m.content
+      parts: [{ text: m.content }]
     }));
 
     const responseText = await getChatResponse(input, history);
@@ -93,6 +111,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
       timestamp: Date.now()
     }]);
     setIsLoading(false);
+  };
+
+  const handleReset = () => {
+    if (confirm('Czy na pewno chcesz wyczyścić historię czatu?')) {
+      setMessages([INITIAL_MESSAGE]);
+    }
+  };
+
+  // Helper to safely render markdown as HTML
+  const getMarkdownHtml = (content: string) => {
+    return { __html: marked.parse(content) as string };
   };
 
   return (
@@ -107,10 +136,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => setMessages([messages[0]])}
-            className="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"
+            onClick={handleReset}
+            className="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-2"
           >
-            Reset
+            <i className="fas fa-trash-can text-[8px]"></i> Wyczyść
           </button>
         </div>
       </header>
@@ -134,15 +163,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
                   </div>
                 )}
                 
-                <div className={`prose prose-invert max-w-none text-sm md:text-base
-                  prose-headings:font-black prose-headings:tracking-tight
-                  prose-h1:text-xl md:h1:text-2xl prose-h1:mb-4
-                  prose-h2:text-lg prose-h2:mt-6 prose-h2:text-blue-400
-                  prose-table:text-xs md:table:text-sm prose-table:my-4
-                  prose-th:p-2 prose-td:p-2
-                `}>
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
-                </div>
+                <div 
+                  className={`prose prose-invert max-w-none text-sm md:text-base
+                    prose-headings:font-black prose-headings:tracking-tight
+                    prose-h1:text-xl md:h1:text-2xl prose-h1:mb-4
+                    prose-h2:text-lg prose-h2:mt-6 prose-h2:text-blue-400
+                    prose-p:leading-relaxed prose-p:text-slate-300
+                    prose-strong:text-white prose-strong:font-black
+                    prose-ul:my-4 prose-li:my-1
+                  `}
+                  dangerouslySetInnerHTML={getMarkdownHtml(msg.content)}
+                />
                 
                 {msg.role === 'model' && msg.id !== '1' && (
                   <div className="mt-8 pt-6 border-t border-white/5 flex flex-wrap gap-2">
@@ -189,7 +220,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSaveWorkout }) => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Napisz..."
+                placeholder="Napisz do asystenta..."
                 className="w-full bg-slate-900/80 border border-white/10 text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-blue-500/50 text-sm placeholder:text-slate-700"
               />
             </div>

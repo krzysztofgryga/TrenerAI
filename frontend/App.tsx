@@ -1,204 +1,148 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import SavedWorkouts from './components/SavedWorkouts';
 import ClientsManager from './components/ClientsManager';
-import { AppView, SavedWorkout, Client } from './types';
-import * as api from './backendService';
+import CalendarView from './components/CalendarView';
+import { AppView, SavedWorkout, Client, CalendarEvent } from './types';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.CHAT);
   const [savedItems, setSavedItems] = useState<SavedWorkout[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
-  const [sharedWorkout, setSharedWorkout] = useState<SavedWorkout | null>(null);
 
-  // Load data from backend on mount
+  // Persist data in localStorage
   useEffect(() => {
-    const loadData = async () => {
-      const [workouts, clientsData] = await Promise.all([
-        api.getWorkouts(),
-        api.getClients()
-      ]);
-      setSavedItems(workouts);
-      setClients(clientsData);
-    };
-    loadData();
-
-    const params = new URLSearchParams(window.location.search);
-    const shareId = params.get('share');
-    if (shareId) {
-      const sharedCache = JSON.parse(localStorage.getItem('fitcoach_shared_cache') || '{}');
-      if (sharedCache[shareId]) {
-        setSharedWorkout(sharedCache[shareId]);
-      }
-    }
+    const storedWorkouts = localStorage.getItem('fitcoach_saved');
+    if (storedWorkouts) setSavedItems(JSON.parse(storedWorkouts));
+    const storedClients = localStorage.getItem('fitcoach_clients');
+    if (storedClients) setClients(JSON.parse(storedClients));
+    const storedEvents = localStorage.getItem('fitcoach_events');
+    if (storedEvents) setEvents(JSON.parse(storedEvents));
   }, []);
+
+  useEffect(() => { localStorage.setItem('fitcoach_saved', JSON.stringify(savedItems)); }, [savedItems]);
+  useEffect(() => { localStorage.setItem('fitcoach_clients', JSON.stringify(clients)); }, [clients]);
+  useEffect(() => { localStorage.setItem('fitcoach_events', JSON.stringify(events)); }, [events]);
 
   const showToast = (message: string) => {
     setToast({ message, visible: true });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
-    }, 3000);
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
   };
 
-  const handleSaveWorkout = async (title: string, content: string) => {
-    const newItem: SavedWorkout = {
-      id: Date.now().toString(),
-      title,
-      content,
-      date: new Date().toLocaleDateString('pl-PL'),
-      color: '#3b82f6'
-    };
-    await api.addWorkout(newItem);
+  const handleSaveWorkout = (title: string, content: string) => {
+    const newItem: SavedWorkout = { id: Date.now().toString(), title, content, date: new Date().toLocaleDateString('pl-PL'), color: '#3b82f6' };
     setSavedItems(prev => [newItem, ...prev]);
     showToast("Plan został zapisany!");
   };
 
-  const handleUpdateWorkout = (updatedItem: SavedWorkout) => {
-    setSavedItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-    showToast("Zmiany zapisane.");
-  };
-
-  const handleDeleteSaved = async (id: string) => {
-    await api.deleteWorkout(id);
-    setSavedItems(prev => prev.filter(item => item.id !== id));
-    showToast("Plan usunięty.");
-  };
-
-  const handleAddClient = async (client: Client) => {
-    await api.addClient(client);
-    setClients(prev => [client, ...prev]);
-    showToast("Dodano podopiecznego.");
-  };
-
-  const handleUpdateClient = async (updatedClient: Client) => {
-    await api.updateClient(updatedClient);
-    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
-    showToast("Dane zaktualizowane.");
-  };
-
-  const handleDeleteClient = async (id: string) => {
-    await api.deleteClient(id);
-    setClients(prev => prev.filter(c => c.id !== id));
-    showToast("Usunięto z bazy.");
-  };
-
-  const closeSharedView = () => {
-    setSharedWorkout(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete('share');
-    window.history.replaceState({}, '', url);
-  };
-
-  return (
-    <div className="flex flex-col md:flex-row h-screen bg-slate-950 text-slate-100 overflow-hidden relative">
-      {/* Toast Notification */}
-      <div className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[100] transition-all duration-500 transform ${toast.visible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'}`}>
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 rounded-full md:rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10">
-          <i className="fas fa-check text-xs text-white"></i>
-          <span className="font-bold text-xs md:text-sm whitespace-nowrap">{toast.message}</span>
-        </div>
-      </div>
-
-      {/* Shared View Modal */}
-      {sharedWorkout && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="glass-effect w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl border-white/5">
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-center bg-blue-600/5">
-              <h2 className="text-xl font-bold">{sharedWorkout.title}</h2>
-              <button onClick={closeSharedView} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5"><i className="fas fa-times"></i></button>
-            </div>
-            <div className="p-8 max-h-[50vh] overflow-y-auto whitespace-pre-wrap text-slate-300 text-sm leading-relaxed scrollbar-hide">
-              {sharedWorkout.content}
-            </div>
-            <div className="p-8 border-t border-slate-800 flex flex-col sm:flex-row gap-3">
-              <button 
-                onClick={() => { handleSaveWorkout(sharedWorkout.title, sharedWorkout.content); closeSharedView(); }}
-                className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-xl shadow-blue-900/30"
-              >
-                Dodaj do moich planów
-              </button>
-              <button onClick={closeSharedView} className="py-4 px-8 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all">Zamknij</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Sidebar (Hidden on Mobile) */}
-      <div className="hidden md:flex">
-        <Sidebar 
-          activeView={activeView} 
-          onViewChange={setActiveView} 
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <main className="flex-1 relative flex flex-col min-w-0 overflow-hidden pb-20 md:pb-0">
-        {activeView === AppView.CHAT && (
-          <ChatInterface onSaveWorkout={handleSaveWorkout} />
-        )}
-        
-        {activeView === AppView.SAVED && (
+  const currentViewContent = useMemo(() => {
+    switch (activeView) {
+      case AppView.CHAT:
+        return <ChatInterface key="chat" onSaveWorkout={handleSaveWorkout} />;
+      case AppView.SAVED:
+        return (
           <SavedWorkouts 
+            key="saved"
             items={savedItems} 
-            onDelete={handleDeleteSaved} 
-            onUpdate={handleUpdateWorkout}
+            onDelete={id => setSavedItems(prev => prev.filter(i => i.id !== id))} 
+            onUpdate={item => setSavedItems(prev => prev.map(i => i.id === item.id ? item : i))} 
           />
-        )}
-
-        {activeView === AppView.CLIENTS && (
+        );
+      case AppView.CLIENTS:
+        return (
           <ClientsManager 
+            key="clients"
             clients={clients} 
-            onAdd={handleAddClient} 
-            onUpdate={handleUpdateClient} 
-            onDelete={handleDeleteClient}
+            events={events}
+            onAdd={c => setClients(prev => [c, ...prev])} 
+            onUpdate={c => setClients(prev => prev.map(i => i.id === c.id ? c : i))} 
+            onDelete={id => setClients(prev => prev.filter(i => i.id !== id))} 
           />
-        )}
-
-        {activeView === AppView.SETTINGS && (
-          <div className="p-6 md:p-12 max-w-2xl mx-auto w-full overflow-y-auto">
-            <h1 className="text-3xl font-black mb-8">Konfiguracja</h1>
-            <div className="space-y-6">
-              <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                <p className="text-slate-400 text-sm mb-6">Ustawienia systemowe CoachOS.</p>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
-                    <span className="text-sm font-bold text-slate-300">Wersja Silnika</span>
-                    <span className="text-xs font-black text-blue-400 uppercase">Ollama + RAG</span>
+        );
+      case AppView.CALENDAR:
+        return (
+          <CalendarView 
+            key="calendar"
+            clients={clients} 
+            events={events} 
+            onAddEvent={e => setEvents(prev => [...prev, e])} 
+            onDeleteEvent={id => setEvents(prev => prev.filter(e => e.id !== id))} 
+          />
+        );
+      case AppView.SETTINGS:
+        return (
+          <div key="settings" className="p-8 md:p-12 max-w-2xl mx-auto w-full view-enter">
+            <h1 className="text-4xl font-black mb-10 tracking-tight text-white">Konfiguracja Systemu</h1>
+            <div className="bg-white/5 border border-white/5 p-10 rounded-[3rem] shadow-2xl backdrop-blur-sm">
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-8">Status Operacyjny</p>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-6 bg-black/40 rounded-[2rem] border border-white/5 group hover:border-blue-500/30 transition-all">
+                  <div className="flex items-center gap-5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+                      <i className="fas fa-brain"></i>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-slate-300 block">Silnik AI</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-black">Gemini 3 Pro Preview</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
-                    <span className="text-sm font-bold text-slate-300">Przechowywanie</span>
-                    <span className="text-xs font-black text-green-500 uppercase">Backend API</span>
-                  </div>
+                  <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        );
+      default:
+        return null;
+    }
+  }, [activeView, savedItems, clients, events]);
+
+  return (
+    <div className="flex flex-col md:flex-row h-screen bg-slate-950 text-slate-100 overflow-hidden relative">
+      <div className={`fixed top-8 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-[200] transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) transform ${toast.visible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'}`}>
+        <div className="bg-white text-black px-8 py-4 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.5)] flex items-center gap-4 border border-white/20">
+          <i className="fas fa-check-circle text-blue-600"></i>
+          <span className="font-black text-[11px] uppercase tracking-widest">{toast.message}</span>
+        </div>
+      </div>
+
+      <div className="hidden md:flex">
+        <Sidebar 
+          activeView={activeView} 
+          onViewChange={setActiveView} 
+          isCollapsed={isSidebarCollapsed} 
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+        />
+      </div>
+
+      <main className="flex-1 relative flex flex-col min-w-0 overflow-hidden pb-24 md:pb-0">
+        {currentViewContent}
       </main>
 
-      {/* Mobile Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#020617]/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 flex justify-between items-center z-[100] shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 px-6 py-5 flex justify-between items-center z-[150] shadow-[0_-20px_50px_rgba(0,0,0,0.8)]">
         {[
           { id: AppView.CHAT, icon: 'fa-terminal', label: 'AI' },
-          { id: AppView.SAVED, icon: 'fa-folder-closed', label: 'Plany' },
-          { id: AppView.CLIENTS, icon: 'fa-user-group', label: 'Ludzie' },
-          { id: AppView.SETTINGS, icon: 'fa-sliders', label: 'Opcje' },
+          { id: AppView.SAVED, icon: 'fa-layer-group', label: 'Plany' },
+          { id: AppView.CLIENTS, icon: 'fa-users-viewfinder', label: 'Ludzie' },
+          { id: AppView.CALENDAR, icon: 'fa-calendar-check', label: 'Dzień' },
+          { id: AppView.SETTINGS, icon: 'fa-gear', label: 'Opcje' },
         ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveView(item.id)}
-            className={`flex flex-col items-center gap-1.5 transition-all ${
-              activeView === item.id ? 'text-blue-400 scale-110' : 'text-slate-600'
-            }`}
+          <button 
+            key={item.id} 
+            onClick={() => setActiveView(item.id)} 
+            className={`flex flex-col items-center gap-2 transition-all duration-500 relative ${activeView === item.id ? 'text-blue-400' : 'text-slate-600 hover:text-slate-400'}`}
           >
-            <i className={`fas ${item.icon} text-lg`}></i>
-            <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeView === item.id ? 'bg-blue-600/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] scale-110' : ''}`}>
+              <i className={`fas ${item.icon} text-lg`}></i>
+            </div>
+            <span className="text-[7px] font-black uppercase tracking-tighter opacity-80">{item.label}</span>
+            {activeView === item.id && (
+              <div className="absolute -top-1 w-1 h-1 bg-blue-500 rounded-full"></div>
+            )}
           </button>
         ))}
       </nav>
