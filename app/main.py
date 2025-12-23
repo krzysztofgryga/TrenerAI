@@ -839,20 +839,61 @@ def execute_chat_command(cmd: dict) -> str:
 @app.post("/chat")
 async def chat(request: ChatRequest) -> dict:
     """
-    Chat endpoint with RAG - retrieves exercises from Qdrant and generates response.
-    Also handles client management commands.
+    Chat endpoint with Intent Parser + RAG.
+
+    Flow:
+    1. Parse intent from message
+    2. If command intent → execute command
+    3. If general chat → use RAG for response
     """
     logger.info(f"Chat request: {request.message[:100]}...")
 
     try:
-        # Check for client management commands first
+        # Import Intent Parser and Command Executor
+        from app.intent_parser import get_intent_parser, IntentType
+        from app.command_executor import get_command_executor
+
+        # Parse intent
+        parser = get_intent_parser()
+        history = [{"role": m.role, "content": m.content} for m in request.history] if request.history else []
+        parsed_intent = parser.parse(request.message, history)
+
+        logger.info(f"Parsed intent: {parsed_intent.intent} (confidence: {parsed_intent.confidence})")
+
+        # Handle command intents
+        if parsed_intent.intent != IntentType.GENERAL_CHAT and parsed_intent.confidence > 0.5:
+            # Get DB session if available
+            db_session = None
+            if DB_AVAILABLE:
+                from app.database import SessionLocal
+                db_session = SessionLocal()
+
+            try:
+                executor = get_command_executor(db_session)
+                result = executor.execute(parsed_intent)
+
+                if result.success or result.follow_up_question:
+                    response_text = result.message
+                    if result.follow_up_question:
+                        response_text = result.follow_up_question
+
+                    return {
+                        "response": response_text,
+                        "intent": parsed_intent.intent.value,
+                        "data": result.data
+                    }
+            finally:
+                if db_session:
+                    db_session.close()
+
+        # Fallback: Legacy command parser (for backward compatibility)
         cmd = parse_chat_command(request.message)
         if cmd:
             response_text = execute_chat_command(cmd)
             if response_text:
                 return {"response": response_text}
 
-        # Build context from Qdrant
+        # General chat with RAG
         context = ""
         if check_collection_exists():
             vector_store = get_vector_store()
