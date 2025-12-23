@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -26,7 +27,7 @@ from typing import Annotated, List, Optional
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.agent import app_graph, get_vector_store, get_llm, check_collection_exists
@@ -44,6 +45,18 @@ try:
 except ImportError:
     DB_AVAILABLE = False
     logging.warning("Database module not available. Running without persistence.")
+
+    # Dummy get_db when database is not available
+    def get_db():
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    def init_db():
+        pass
+
+    DBUser = None
+    GeneratedTraining = None
+    DBFeedback = None
+    DifficultyLevel = None
 
 # =============================================================================
 # Logging Configuration
@@ -94,13 +107,28 @@ def save_workouts(workouts: List[dict]):
 # FastAPI Application
 # =============================================================================
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan - startup and shutdown events."""
+    # Startup
+    if DB_AVAILABLE:
+        try:
+            init_db()
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.warning(f"Database initialization failed: {e}. Running without DB.")
+    yield
+    # Shutdown (cleanup if needed)
+
+
 app = FastAPI(
     title="TrenerAI API",
     description="AI-powered training plan generator for fitness trainers. "
                 "Supports both OpenAI and local Ollama LLMs.",
     version="0.2.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # CORS middleware - allows frontend applications to access the API
@@ -245,6 +273,8 @@ class UserCreate(BaseModel):
 
 class UserResponse(BaseModel):
     """User response model."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     name: Optional[str]
@@ -255,21 +285,17 @@ class UserResponse(BaseModel):
     preferred_difficulty: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class TrainingHistoryResponse(BaseModel):
     """Training history entry."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     input_params: dict
     plan: dict
     model_name: Optional[str]
     prompt_version: Optional[str]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class FeedbackCreate(BaseModel):
@@ -285,29 +311,13 @@ class FeedbackCreate(BaseModel):
 
 class FeedbackResponse(BaseModel):
     """Feedback response model."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     training_id: int
     rating: int
     comment: Optional[str]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# =============================================================================
-# Application Startup
-# =============================================================================
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database on application startup."""
-    if DB_AVAILABLE:
-        try:
-            init_db()
-            logger.info("Database initialized successfully")
-        except Exception as e:
-            logger.warning(f"Database initialization failed: {e}. Running without DB.")
 
 
 # =============================================================================
