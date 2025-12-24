@@ -134,19 +134,36 @@ class ChatService:
             return {"response": f"Błąd generowania planu: {e}"}
 
     def _handle_general_chat(self, request: ChatRequest) -> Dict[str, Any]:
-        """Handle general chat with RAG."""
+        """Handle general chat with RAG (multi-collection search)."""
         try:
-            from app.agent import get_vector_store, get_llm, check_collection_exists
+            from app.agent import (
+                get_llm,
+                search_all_collections,
+                format_rag_context,
+                get_vector_store,
+                check_collection_exists,
+            )
 
-            # Build context from Qdrant
+            # Build context from all Qdrant collections
             context = ""
-            if check_collection_exists():
-                vector_store = get_vector_store()
-                docs = vector_store.similarity_search(request.message, k=10)
-                if docs:
-                    context = "Dostępne ćwiczenia z bazy:\n" + "\n".join(
-                        [f"- {d.page_content}" for d in docs]
-                    )
+
+            # First try new multi-collection search
+            results = search_all_collections(request.message, k=5)
+            if results:
+                context = format_rag_context(results, max_results=10)
+                logger.info(f"Found {len(results)} results from trainer collections")
+
+            # Fallback to old gym_exercises collection if no results
+            if not context and check_collection_exists():
+                try:
+                    vector_store = get_vector_store()
+                    docs = vector_store.similarity_search(request.message, k=10)
+                    if docs:
+                        context = "### ĆWICZENIA:\n" + "\n".join(
+                            [f"- {d.page_content}" for d in docs]
+                        )
+                except Exception as e:
+                    logger.warning(f"Old collection search failed: {e}")
 
             # Build conversation history
             history_text = ""
@@ -154,13 +171,23 @@ class ChatService:
                 role = "Użytkownik" if msg.role == "user" else "Asystent"
                 history_text += f"{role}: {msg.content}\n\n"
 
-            # System prompt
-            system_prompt = """Jesteś asystentem trenera personalnego. Odpowiadaj krótko i konkretnie.
-Używaj formatowania Markdown. Nie wymyślaj danych - używaj tylko tego co wiesz.
+            # Enhanced system prompt
+            system_prompt = """Jesteś profesjonalnym asystentem trenera personalnego.
 
-{context}"""
+ZASADY:
+- Odpowiadaj po polsku, zwięźle i konkretnie
+- Używaj formatowania Markdown (nagłówki, listy, tabele)
+- Bazuj TYLKO na informacjach z kontekstu poniżej
+- Jeśli nie masz informacji - powiedz to wprost
+- Podawaj konkretne liczby (serie, powtórzenia, kalorie)
+- Ostrzegaj o przeciwwskazaniach gdy to istotne
 
-            full_prompt = f"{system_prompt.format(context=context)}\n\n{history_text}Użytkownik: {request.message}\n\nAsystent:"
+KONTEKST Z BAZY WIEDZY:
+{context}
+
+Jeśli kontekst jest pusty, odpowiedz na podstawie ogólnej wiedzy o treningu."""
+
+            full_prompt = f"{system_prompt.format(context=context if context else '(brak danych w bazie)')}\n\n{history_text}Użytkownik: {request.message}\n\nAsystent:"
 
             llm = get_llm()
             response = llm.invoke(full_prompt)

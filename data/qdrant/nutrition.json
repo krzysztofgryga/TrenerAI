@@ -1,0 +1,222 @@
+[
+  {
+    "food": "Pierś z kurczaka",
+    "calories": 165,
+    "protein": 31,
+    "carbs": 0,
+    "fat": 3.6,
+    "category": "białko",
+    "when": ["po treningu", "obiad", "kolacja"],
+    "benefits": ["Wysokobiałkowe", "Niskotłuszczowe", "Łatwe w przygotowaniu"],
+    "tips": "Gotuj na parze lub griluj. Unikaj smażenia na głębokim oleju."
+  },
+  {
+    "food": "Łosoś",
+    "calories": 208,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 13,
+    "category": "białko",
+    "when": ["obiad", "kolacja"],
+    "benefits": ["Omega-3", "Wysokobiałkowe", "Zdrowe tłuszcze"],
+    "tips": "Jedz 2-3 razy w tygodniu. Piecz lub grilluj z cytryną."
+  },
+  {
+    "food": "Jaja kurze",
+    "calories": 155,
+    "protein": 13,
+    "carbs": 1.1,
+    "fat": 11,
+    "category": "białko",
+    "when": ["śniadanie", "po treningu", "przekąska"],
+    "benefits": ["Pełnowartościowe białko", "Cholina", "Witamina D"],
+    "tips": "2-4 jaja dziennie jest bezpieczne dla większości osób."
+  },
+  {
+    "food": "Twaróg półtłusty",
+    "calories": 103,
+    "protein": 12,
+    "carbs": 3,
+    "fat": 4.5,
+    "category": "białko",
+    "when": ["śniadanie", "przed snem", "przekąska"],
+    "benefits": ["Kazeina - wolno trawione białko", "Wapń"],
+    "tips": "Idealny przed snem - dostarcza białko przez noc."
+  },
+  {
+    "food": "Jogurt grecki naturalny",
+    "calories": 97,
+    "protein": 9,
+    "carbs": 3.6,
+    "fat": 5,
+    "category": "białko",
+    "when": ["śniadanie", "po treningu", "przekąska"],
+    "benefits": ["Probiotyki", "Białko", "Wapń"],
+    "tips": "Wybieraj wersje bez dodatku cukru."
+  },
+  {
+    "food": "Ryż biały",
+    "calories": 130,
+    "protein": 2.7,
+    "carbs": 28,
+    "fat": 0.3,
+    "category": "węglowodany",
+    "when": ["przed treningiem", "po treningu", "obiad"],
+    "benefits": ["Szybkie węglowodany", "Łatwo trawiony", "Energia"],
+    "tips": "Idealny po treningu - szybko uzupełnia glikogen."
+  },
+  {
+    "food": "Ryż brązowy",
+    "calories": 112,
+    "protein": 2.6,
+    "carbs": 24,
+    "fat": 0.9,
+    "category": "węglowodany",
+    "when": ["obiad", "kolacja"],
+    "benefits": ["Błonnik", "Wolniejsze trawienie", "Witaminy z grupy B"],
+    "tips": "Lepszy na posiłki daleko od treningu."
+  },
+  {
+    "food": "Owsianka (płatki owsiane)",
+    "calories": 389,
+    "protein": 17,
+    "carbs": 66,
+    "fat": 7,
+    "category": "węglowodany",
+    "when": ["śniadanie", "przed treningiem"],
+    "benefits": ["Błonnik", "Wolne węglowodany", "Energia na dłużej"],
+    "tips": "Jedz 1.5-2h przed treningiem. Dodaj białko (jogurt, whey)."
+  },
+  {
+    "food": "Bataty (słodkie ziemniaki)",
+    "calories": 86,
+    "protein": 1.6,
+    "carbs": 20,
+    "fat": 0.1,
+    "category": "węglowodany",
+    "when": ["obiad", "po treningu"],
+    "benefits": ["Beta-karoten", "Błonnik", "Potas"],
+    "tips": "Piecz lub gotuj. Świetne po treningu z białkiem."
+  },
+  {
+    "food": "Ziemniaki",
+    "calories": 77,
+    "protein": 2,
+    "carbs": 17,
+    "fat": 0.1,
+    "category": "węglowodany",
+    "when": ["obiad", "po treningu"],
+    "benefits": ["Potas", "Witamina C", "Sycące"],
+    "tips": "Gotowane lub pieczone - unikaj frytek."
+  },
+  {
+    "food": "Banan",
+    "calories": 89,
+    "protein": 1.1,
+    "carbs": 23,
+    "fat": 0.3,
+    "category": "węglowodany",
+    "when": ["przed treningiem", "po treningu", "przekąska"],
+    "benefits": ["Potas", "Szybka energia", "Łatwo dostępny"],
+    "tips": "Idealny przed treningiem - szybka energia."
+  },
+  {
+    "food": "Makaron pełnoziarnisty",
+    "calories": 131,
+    "protein": 5,
+    "carbs": 27,
+    "fat": 1.1,
+    "category": "węglowodany",
+    "when": ["obiad"],
+    "benefits": ["Błonnik", "Wolne węglowodany", "Sycące"],
+    "tips": "Al dente - niższy indeks glikemiczny."
+  },
+  {
+    "food": "Oliwa z oliwek",
+    "calories": 884,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 100,
+    "category": "tłuszcze",
+    "when": ["obiad", "kolacja"],
+    "benefits": ["Zdrowe tłuszcze", "Polifenole", "Przeciwzapalne"],
+    "tips": "1-2 łyżki dziennie. Używaj na zimno do sałatek."
+  },
+  {
+    "food": "Awokado",
+    "calories": 160,
+    "protein": 2,
+    "carbs": 9,
+    "fat": 15,
+    "category": "tłuszcze",
+    "when": ["śniadanie", "obiad", "przekąska"],
+    "benefits": ["Zdrowe tłuszcze", "Błonnik", "Potas"],
+    "tips": "Pół awokado dziennie - świetne do jajecznicy."
+  },
+  {
+    "food": "Orzechy włoskie",
+    "calories": 654,
+    "protein": 15,
+    "carbs": 14,
+    "fat": 65,
+    "category": "tłuszcze",
+    "when": ["przekąska", "śniadanie"],
+    "benefits": ["Omega-3", "Białko", "Błonnik"],
+    "tips": "30g dziennie (około 7 orzechów). Nie przesadzaj - kaloryczne!"
+  },
+  {
+    "food": "Migdały",
+    "calories": 579,
+    "protein": 21,
+    "carbs": 22,
+    "fat": 50,
+    "category": "tłuszcze",
+    "when": ["przekąska", "śniadanie"],
+    "benefits": ["Witamina E", "Magnez", "Białko"],
+    "tips": "Garść (około 23 sztuki) jako przekąska."
+  },
+  {
+    "food": "Brokuły",
+    "calories": 34,
+    "protein": 2.8,
+    "carbs": 7,
+    "fat": 0.4,
+    "category": "warzywa",
+    "when": ["obiad", "kolacja"],
+    "benefits": ["Witamina C", "Błonnik", "Przeciwnowotworowe"],
+    "tips": "Gotuj na parze max 5 min - zachowasz składniki."
+  },
+  {
+    "food": "Szpinak",
+    "calories": 23,
+    "protein": 2.9,
+    "carbs": 3.6,
+    "fat": 0.4,
+    "category": "warzywa",
+    "when": ["śniadanie", "obiad", "kolacja"],
+    "benefits": ["Żelazo", "Witamina K", "Magnez"],
+    "tips": "Dodawaj do koktajli, jajecznicy, sałatek."
+  },
+  {
+    "food": "Białko serwatkowe (WPC)",
+    "calories": 120,
+    "protein": 24,
+    "carbs": 3,
+    "fat": 1.5,
+    "category": "suplementy",
+    "when": ["po treningu", "śniadanie"],
+    "benefits": ["Szybkie wchłanianie", "Wszystkie aminokwasy", "Wygodne"],
+    "tips": "30g w ciągu 30 min po treningu z wodą lub mlekiem."
+  },
+  {
+    "food": "Kreatyna monohydrat",
+    "calories": 0,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 0,
+    "category": "suplementy",
+    "when": ["codziennie"],
+    "benefits": ["Siła", "Wydolność", "Masa mięśniowa"],
+    "tips": "3-5g dziennie, codziennie. Nie wymaga ładowania."
+  }
+]

@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Full Body Workout (FBW)",
+    "goal": "budowa masy i siły",
+    "days_per_week": 3,
+    "level": "beginner",
+    "description": "Trening całego ciała 3 razy w tygodniu z przerwą min. 1 dnia. Idealny dla początkujących - pozwala trenować każdą partię 3x w tygodniu.",
+    "schedule": ["Trening A", "Przerwa", "Trening B", "Przerwa", "Trening A", "Przerwa", "Przerwa"],
+    "sample_workout_a": [
+      {"exercise": "Przysiad ze sztangą", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wyciskanie sztangi na ławce płaskiej", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wiosłowanie sztangą", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 3, "reps": "8-10"},
+      {"exercise": "Uginanie ramion", "sets": 2, "reps": "10-12"},
+      {"exercise": "Prostowanie na wyciągu", "sets": 2, "reps": "10-12"}
+    ],
+    "sample_workout_b": [
+      {"exercise": "Martwy ciąg", "sets": 3, "reps": "6-8"},
+      {"exercise": "Wyciskanie hantli na ławce skośnej", "sets": 3, "reps": "8-10"},
+      {"exercise": "Podciąganie na drążku", "sets": 3, "reps": "max"},
+      {"exercise": "Wznosy bokiem", "sets": 3, "reps": "12-15"},
+      {"exercise": "Plank", "sets": 3, "reps": "30-60s"}
+    ],
+    "progression": "Dodawaj 2.5kg do sztangi gdy zrobisz górny zakres powtórzeń w każdej serii.",
+    "tips": ["Rozgrzewka 5-10 min", "Przerwy 2-3 min między seriami", "Skup się na technice"]
+  },
+  {
+    "name": "Push/Pull/Legs (PPL)",
+    "goal": "budowa masy mięśniowej",
+    "days_per_week": 6,
+    "level": "intermediate",
+    "description": "Podział na trzy dni: pchające (klatka, barki, triceps), ciągnące (plecy, biceps) i nogi. Każda partia trenowana 2x w tygodniu.",
+    "schedule": ["Push", "Pull", "Legs", "Push", "Pull", "Legs", "Przerwa"],
+    "sample_push": [
+      {"exercise": "Wyciskanie sztangi na ławce płaskiej", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wyciskanie hantli na ławce skośnej", "sets": 3, "reps": "8-10"},
+      {"exercise": "Rozpiętki hantlami", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wznosy bokiem", "sets": 3, "reps": "12-15"},
+      {"exercise": "Prostowanie na wyciągu", "sets": 3, "reps": "10-12"},
+      {"exercise": "French press", "sets": 3, "reps": "10-12"}
+    ],
+    "sample_pull": [
+      {"exercise": "Martwy ciąg", "sets": 4, "reps": "5-6"},
+      {"exercise": "Podciąganie na drążku", "sets": 4, "reps": "6-10"},
+      {"exercise": "Wiosłowanie sztangą", "sets": 3, "reps": "8-10"},
+      {"exercise": "Ściąganie drążka wyciągu", "sets": 3, "reps": "10-12"},
+      {"exercise": "Face pulls", "sets": 3, "reps": "12-15"},
+      {"exercise": "Uginanie ramion ze sztangą", "sets": 3, "reps": "8-10"},
+      {"exercise": "Hammer curls", "sets": 3, "reps": "10-12"}
+    ],
+    "sample_legs": [
+      {"exercise": "Przysiad ze sztangą", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wypychanie na suwnicy", "sets": 3, "reps": "10-12"},
+      {"exercise": "Uginanie nóg leżąc", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wypady z hantlami", "sets": 3, "reps": "10-12 na nogę"},
+      {"exercise": "Hip thrust", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wspięcia na palce", "sets": 4, "reps": "12-15"}
+    ],
+    "progression": "Prowadź dziennik treningowy. Zwiększaj ciężar lub powtórzenia co tydzień.",
+    "tips": ["Min. 7h snu", "2g białka/kg masy ciała", "Deload co 6-8 tygodni"]
+  },
+  {
+    "name": "Upper/Lower Split",
+    "goal": "budowa masy i siły",
+    "days_per_week": 4,
+    "level": "intermediate",
+    "description": "Podział na górę i dół ciała. 2 dni górne + 2 dni dolne w tygodniu. Dobry balans między objętością a regeneracją.",
+    "schedule": ["Upper", "Lower", "Przerwa", "Upper", "Lower", "Przerwa", "Przerwa"],
+    "sample_upper_a": [
+      {"exercise": "Wyciskanie sztangi na ławce płaskiej", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wiosłowanie sztangą", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 3, "reps": "8-10"},
+      {"exercise": "Podciąganie podchwytem", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wznosy bokiem", "sets": 3, "reps": "12-15"},
+      {"exercise": "Face pulls", "sets": 3, "reps": "15-20"}
+    ],
+    "sample_lower_a": [
+      {"exercise": "Przysiad ze sztangą", "sets": 4, "reps": "6-8"},
+      {"exercise": "Martwy ciąg rumuński", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wypychanie na suwnicy", "sets": 3, "reps": "10-12"},
+      {"exercise": "Hip thrust", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wspięcia na palce", "sets": 4, "reps": "12-15"},
+      {"exercise": "Plank", "sets": 3, "reps": "45-60s"}
+    ],
+    "progression": "Alternuj między siłą (5-6 rep) a hipertrofią (8-12 rep) co 4 tygodnie.",
+    "tips": ["Pierwszy dzień upper - priorytet klatka, drugi - priorytet plecy"]
+  },
+  {
+    "name": "Bro Split (5-dniowy split)",
+    "goal": "maksymalna hipertrofia",
+    "days_per_week": 5,
+    "level": "advanced",
+    "description": "Każda grupa mięśniowa raz w tygodniu z wysoką objętością. Popularny wśród kulturystów.",
+    "schedule": ["Klatka", "Plecy", "Barki", "Nogi", "Ramiona", "Przerwa", "Przerwa"],
+    "sample_chest_day": [
+      {"exercise": "Wyciskanie sztangi na ławce płaskiej", "sets": 4, "reps": "6-8"},
+      {"exercise": "Wyciskanie hantli na ławce skośnej", "sets": 4, "reps": "8-10"},
+      {"exercise": "Wyciskanie na ławce ujemnej", "sets": 3, "reps": "8-10"},
+      {"exercise": "Rozpiętki na maszynie", "sets": 3, "reps": "12-15"},
+      {"exercise": "Przenoszenie hantla", "sets": 3, "reps": "12-15"},
+      {"exercise": "Pompki do końca", "sets": 2, "reps": "max"}
+    ],
+    "sample_back_day": [
+      {"exercise": "Martwy ciąg", "sets": 4, "reps": "5-6"},
+      {"exercise": "Podciąganie na drążku", "sets": 4, "reps": "6-10"},
+      {"exercise": "Wiosłowanie sztangą", "sets": 4, "reps": "8-10"},
+      {"exercise": "Wiosłowanie hantlem jednorącz", "sets": 3, "reps": "10-12"},
+      {"exercise": "Ściąganie drążka wyciągu", "sets": 3, "reps": "10-12"},
+      {"exercise": "Hiperextensje", "sets": 3, "reps": "12-15"}
+    ],
+    "progression": "Zwiększaj objętość (serie) przez 4-6 tygodni, potem deload.",
+    "tips": ["Nie dla początkujących", "Wymaga dobrej regeneracji", "Min. 8h snu"]
+  },
+  {
+    "name": "Siła 5x5 (StrongLifts)",
+    "goal": "budowa siły",
+    "days_per_week": 3,
+    "level": "beginner",
+    "description": "Prosty program siłowy oparty na 5 seriach po 5 powtórzeń. Tylko ćwiczenia złożone ze sztangą.",
+    "schedule": ["Trening A", "Przerwa", "Trening B", "Przerwa", "Trening A", "Przerwa", "Przerwa"],
+    "sample_workout_a": [
+      {"exercise": "Przysiad ze sztangą", "sets": 5, "reps": "5"},
+      {"exercise": "Wyciskanie sztangi na ławce płaskiej", "sets": 5, "reps": "5"},
+      {"exercise": "Wiosłowanie sztangą", "sets": 5, "reps": "5"}
+    ],
+    "sample_workout_b": [
+      {"exercise": "Przysiad ze sztangą", "sets": 5, "reps": "5"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 5, "reps": "5"},
+      {"exercise": "Martwy ciąg", "sets": 1, "reps": "5"}
+    ],
+    "progression": "Dodawaj 2.5kg do każdego ćwiczenia każdy trening. Jeśli nie udało się - powtórz ciężar.",
+    "tips": ["Nie dodawaj ćwiczeń", "Przerwy 3-5 min", "Technika przed ciężarem"]
+  },
+  {
+    "name": "Program na redukcję",
+    "goal": "redukcja tkanki tłuszczowej",
+    "days_per_week": 4,
+    "level": "intermediate",
+    "description": "Utrzymanie masy mięśniowej przy deficycie kalorycznym. Wyższa częstotliwość, niższa objętość.",
+    "schedule": ["Upper", "Lower", "Przerwa", "Upper", "Lower", "Cardio/Przerwa", "Przerwa"],
+    "sample_upper": [
+      {"exercise": "Wyciskanie sztangi", "sets": 3, "reps": "6-8"},
+      {"exercise": "Podciąganie", "sets": 3, "reps": "6-10"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wiosłowanie", "sets": 3, "reps": "8-10"},
+      {"exercise": "Uginanie ramion", "sets": 2, "reps": "10-12"},
+      {"exercise": "Prostowanie na wyciągu", "sets": 2, "reps": "10-12"}
+    ],
+    "sample_lower": [
+      {"exercise": "Przysiad", "sets": 3, "reps": "6-8"},
+      {"exercise": "Martwy ciąg rumuński", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wypychanie", "sets": 3, "reps": "10-12"},
+      {"exercise": "Hip thrust", "sets": 3, "reps": "10-12"},
+      {"exercise": "Plank", "sets": 3, "reps": "45s"}
+    ],
+    "diet_tips": [
+      "Deficyt 300-500 kcal",
+      "2g białka/kg masy ciała",
+      "Węglowodany wokół treningu",
+      "10000 kroków dziennie"
+    ],
+    "progression": "Utrzymuj ciężary. Skup się na zachowaniu siły.",
+    "tips": ["Nie obniżaj ciężarów z góry", "Monitoruj siłę", "Cardio LISS 2-3x tydzień"]
+  },
+  {
+    "name": "Program dla kobiet - pośladki i nogi",
+    "goal": "modelowanie sylwetki",
+    "days_per_week": 4,
+    "level": "beginner",
+    "description": "Nacisk na dolne partie ciała z zachowaniem pracy górnej części. Częsty trening pośladków.",
+    "schedule": ["Pośladki/Nogi", "Góra", "Przerwa", "Pośladki/Nogi", "Full Body", "Przerwa", "Przerwa"],
+    "sample_glute_day": [
+      {"exercise": "Hip thrust", "sets": 4, "reps": "10-12"},
+      {"exercise": "Przysiad bułgarski", "sets": 3, "reps": "10-12 na nogę"},
+      {"exercise": "Martwy ciąg rumuński", "sets": 3, "reps": "10-12"},
+      {"exercise": "Abdukcja na maszynie", "sets": 3, "reps": "15-20"},
+      {"exercise": "Glute bridge z gumą", "sets": 3, "reps": "15-20"},
+      {"exercise": "Wspięcia na palce", "sets": 3, "reps": "15-20"}
+    ],
+    "sample_upper": [
+      {"exercise": "Wyciskanie hantli", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wiosłowanie hantlem", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wznosy bokiem", "sets": 3, "reps": "12-15"},
+      {"exercise": "Face pulls", "sets": 3, "reps": "15-20"},
+      {"exercise": "Uginanie ramion", "sets": 2, "reps": "12-15"},
+      {"exercise": "Prostowanie na wyciągu", "sets": 2, "reps": "12-15"}
+    ],
+    "progression": "Zwiększaj ciężar gdy możesz zrobić 12 powtórzeń z dobrą techniką.",
+    "tips": ["Nie bój się ciężarów", "Pośladki regenerują się szybko - można trenować często"]
+  },
+  {
+    "name": "Minimalistyczny (2x tydzień)",
+    "goal": "utrzymanie formy",
+    "days_per_week": 2,
+    "level": "beginner",
+    "description": "Dla zabieganych. Dwa treningi full body w tygodniu - minimum efektywne.",
+    "schedule": ["Przerwa", "Trening", "Przerwa", "Przerwa", "Trening", "Przerwa", "Przerwa"],
+    "sample_workout": [
+      {"exercise": "Przysiad ze sztangą", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wyciskanie sztangi lub hantli", "sets": 3, "reps": "8-10"},
+      {"exercise": "Wiosłowanie lub podciąganie", "sets": 3, "reps": "8-10"},
+      {"exercise": "Martwy ciąg rumuński", "sets": 3, "reps": "10-12"},
+      {"exercise": "Wyciskanie żołnierskie", "sets": 2, "reps": "10-12"},
+      {"exercise": "Plank", "sets": 2, "reps": "45s"}
+    ],
+    "progression": "Małe, regularne postępy. 1.25-2.5kg więcej co 1-2 tygodnie.",
+    "tips": ["Lepsze 2 treningi niż 0", "Skup się na ćwiczeniach złożonych", "45-60 min wystarczy"]
+  }
+]

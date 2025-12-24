@@ -193,6 +193,171 @@ def get_vector_store() -> Qdrant:
 
 
 # =============================================================================
+# Multi-Collection Search for RAG
+# =============================================================================
+
+# New collections for enhanced RAG
+TRAINER_COLLECTIONS = {
+    "techniques": "trainer_techniques",
+    "nutrition": "trainer_nutrition",
+    "programs": "trainer_programs",
+}
+
+
+def get_available_collections() -> list:
+    """
+    Get list of available trainer collections in Qdrant.
+
+    Returns:
+        List of collection names that exist.
+    """
+    try:
+        client = QdrantClient(url=QDRANT_URL)
+        collections = client.get_collections().collections
+        existing = [c.name for c in collections]
+        return [name for name in TRAINER_COLLECTIONS.values() if name in existing]
+    except Exception as e:
+        logger.error(f"Failed to get collections: {e}")
+        return []
+
+
+def search_all_collections(query: str, k: int = 5) -> list:
+    """
+    Search across all trainer collections and combine results.
+
+    Args:
+        query: Search query text.
+        k: Number of results per collection.
+
+    Returns:
+        List of (document, collection_name, score) tuples sorted by relevance.
+    """
+    from langchain_qdrant import QdrantVectorStore
+
+    results = []
+    available = get_available_collections()
+
+    if not available:
+        logger.warning("No trainer collections available in Qdrant")
+        return []
+
+    # Get embeddings
+    try:
+        embeddings = FastEmbedEmbeddings()
+    except Exception as e:
+        logger.error(f"Failed to initialize embeddings: {e}")
+        return []
+
+    client = QdrantClient(url=QDRANT_URL)
+
+    for collection_name in available:
+        try:
+            vectorstore = QdrantVectorStore(
+                client=client,
+                collection_name=collection_name,
+                embedding=embeddings
+            )
+
+            docs_with_scores = vectorstore.similarity_search_with_score(query, k=k)
+
+            for doc, score in docs_with_scores:
+                # Add collection info to metadata
+                doc.metadata["_collection"] = collection_name
+                doc.metadata["_score"] = score
+                results.append((doc, collection_name, score))
+
+        except Exception as e:
+            logger.warning(f"Failed to search collection {collection_name}: {e}")
+            continue
+
+    # Sort by score (lower is better for distance-based scores)
+    results.sort(key=lambda x: x[2])
+
+    return results
+
+
+def search_collection(collection_type: str, query: str, k: int = 5) -> list:
+    """
+    Search a specific trainer collection.
+
+    Args:
+        collection_type: One of 'techniques', 'nutrition', 'programs'.
+        query: Search query text.
+        k: Number of results.
+
+    Returns:
+        List of Document objects.
+    """
+    from langchain_qdrant import QdrantVectorStore
+
+    if collection_type not in TRAINER_COLLECTIONS:
+        logger.warning(f"Unknown collection type: {collection_type}")
+        return []
+
+    collection_name = TRAINER_COLLECTIONS[collection_type]
+
+    try:
+        client = QdrantClient(url=QDRANT_URL)
+
+        # Check if collection exists
+        collections = [c.name for c in client.get_collections().collections]
+        if collection_name not in collections:
+            logger.warning(f"Collection {collection_name} not found")
+            return []
+
+        embeddings = FastEmbedEmbeddings()
+        vectorstore = QdrantVectorStore(
+            client=client,
+            collection_name=collection_name,
+            embedding=embeddings
+        )
+
+        return vectorstore.similarity_search(query, k=k)
+
+    except Exception as e:
+        logger.error(f"Failed to search {collection_name}: {e}")
+        return []
+
+
+def format_rag_context(results: list, max_results: int = 10) -> str:
+    """
+    Format search results as context for LLM.
+
+    Args:
+        results: List from search_all_collections.
+        max_results: Maximum number of results to include.
+
+    Returns:
+        Formatted string for LLM prompt.
+    """
+    if not results:
+        return ""
+
+    sections = {
+        "trainer_techniques": "TECHNIKI ĆWICZEŃ",
+        "trainer_nutrition": "ŻYWIENIE",
+        "trainer_programs": "PROGRAMY TRENINGOWE",
+    }
+
+    # Group by collection
+    grouped = {}
+    for doc, collection, score in results[:max_results]:
+        if collection not in grouped:
+            grouped[collection] = []
+        grouped[collection].append(doc)
+
+    # Format output
+    output_parts = []
+    for collection, docs in grouped.items():
+        section_name = sections.get(collection, collection)
+        output_parts.append(f"\n### {section_name}:\n")
+        for doc in docs:
+            output_parts.append(f"- {doc.page_content[:500]}")
+
+    return "\n".join(output_parts)
+
+
+# =============================================================================
 # LangGraph Nodes
 # =============================================================================
 

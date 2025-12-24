@@ -1,0 +1,122 @@
+[
+  {
+    "exercise": "Martwy ciąg klasyczny",
+    "muscles": ["prostowniki grzbietu", "pośladki", "dwugłowe ud", "czworogłowe ud", "przedramiona"],
+    "difficulty": "hard",
+    "technique": "Stopy na szerokość bioder, sztanga przy goleniach. Chwyć sztangę chwytem na szerokość barków. Napnij brzuch, wyprostuj plecy, klatka do przodu. Wstań prostując nogi i biodra jednocześnie. Sztanga jedzie blisko ciała. Na górze nie odchylaj się do tyłu.",
+    "common_mistakes": ["Zaokrąglone plecy - ryzyko kontuzji", "Kolana zapadają do środka", "Sztanga za daleko od ciała", "Prostowanie nóg przed biodrami", "Odchylanie się do tyłu na górze"],
+    "cues": ["Pchnij podłogę stopami", "Klatka do góry", "Sztanga przy ciele", "Napnij brzuch jakbyś miał dostać cios"],
+    "variations": ["Martwy ciąg sumo", "Martwy ciąg rumuński", "Martwy ciąg na trap barze", "Martwy ciąg z deficytem"],
+    "contraindications": ["Przepuklina dysku", "Ostre bóle kręgosłupa"]
+  },
+  {
+    "exercise": "Przysiad ze sztangą",
+    "muscles": ["czworogłowe ud", "pośladki", "dwugłowe ud", "prostowniki grzbietu", "brzuch"],
+    "difficulty": "hard",
+    "technique": "Sztanga na górnej części pleców (high bar) lub na tylnych deltach (low bar). Stopy nieco szerzej niż biodra, palce lekko na zewnątrz. Napnij brzuch, zejdź w dół łamiąc biodra i kolana jednocześnie. Zejdź do minimum równoległego, kolana w kierunku palców. Wstań pchnięciem z pięt.",
+    "common_mistakes": ["Kolana zapadają do środka", "Odrywanie pięt od podłogi", "Nadmierne pochylenie tułowia", "Za płytki zakres ruchu", "Butt wink na dole"],
+    "cues": ["Rozepnij podłogę stopami", "Klatka do góry", "Kolana na zewnątrz", "Pchnij z pięt"],
+    "variations": ["Front squat", "Goblet squat", "Przysiad bułgarski", "Hack squat", "Przysiad z przerwą"],
+    "contraindications": ["Problemy z kolanami", "Przepuklina dysku", "Poważne problemy z biodrami"]
+  },
+  {
+    "exercise": "Wyciskanie sztangi na ławce płaskiej",
+    "muscles": ["klatka piersiowa", "triceps", "przednie deltoidalne"],
+    "difficulty": "medium",
+    "technique": "Połóż się na ławce, stopy płasko na podłodze. Chwyć sztangę nieco szerzej niż barki. Ściągnij łopatki, zrób mostek. Opuść sztangę do dolnej części klatki, łokcie pod kątem 45-75 stopni. Wyciśnij do góry nad klatkę.",
+    "common_mistakes": ["Rozstawione łopatki", "Łokcie pod kątem 90 stopni", "Odbijanie sztangi od klatki", "Odrywanie pośladków od ławki", "Nierównomierne opuszczanie"],
+    "cues": ["Ściągnij łopatki do kieszeni", "Zegnij sztangę", "Łokcie pod kątem 45 stopni", "Pchnij się od sztangi"],
+    "variations": ["Wyciskanie na ławce skośnej", "Wyciskanie hantlami", "Close grip bench press", "Wyciskanie z zatrzymaniem"],
+    "contraindications": ["Problemy z barkami", "Kontuzje nadgarstków"]
+  },
+  {
+    "exercise": "Podciąganie na drążku",
+    "muscles": ["najszerszy grzbietu", "biceps", "przedramiona", "mięśnie romboidalne", "dolne partie czworobocznego"],
+    "difficulty": "hard",
+    "technique": "Chwyć drążek chwytem na szerokość barków lub szerzej. Zwis pełny, ramiona wyprostowane. Rozpocznij ruch od ściągnięcia łopatek w dół. Podciągnij się aż broda znajdzie się nad drążkiem. Kontrolowany powrót do zwieszenia.",
+    "common_mistakes": ["Kiwanie ciałem (kipping)", "Niepełny zakres ruchu", "Brak ściągnięcia łopatek", "Używanie tylko ramion", "Za szybki powrót"],
+    "cues": ["Łopatki do kieszeni", "Ciągnij łokciami w dół", "Klatka do drążka", "Kontroluj negatyw"],
+    "variations": ["Podciąganie podchwytem", "Podciąganie neutralnym chwytem", "Podciąganie z obciążeniem", "Australijskie podciąganie"],
+    "contraindications": ["Problemy z barkami", "Kontuzje łokci"]
+  },
+  {
+    "exercise": "Wiosłowanie sztangą w opadzie",
+    "muscles": ["najszerszy grzbietu", "mięśnie romboidalne", "tylne deltoidalne", "biceps", "prostowniki grzbietu"],
+    "difficulty": "medium",
+    "technique": "Stopy na szerokość bioder, lekko ugięte kolana. Pochyl tułów do 45-60 stopni, plecy proste. Chwyć sztangę na szerokość barków. Przyciągnij sztangę do dolnej części brzucha, ściskając łopatki. Kontrolowany powrót.",
+    "common_mistakes": ["Zaokrąglone plecy", "Zbyt pionowa pozycja tułowia", "Szarpanie ciężaru", "Ciągnięcie do klatki zamiast brzucha", "Używanie rozpędu"],
+    "cues": ["Napnij brzuch", "Łopatki do siebie", "Łokcie do tyłu", "Kontroluj ruch"],
+    "variations": ["Wiosłowanie hantlem jednorącz", "Wiosłowanie podchwytem", "Pendlay row", "T-bar row"],
+    "contraindications": ["Problemy z dolnym odcinkiem kręgosłupa"]
+  },
+  {
+    "exercise": "Wyciskanie żołnierskie (OHP)",
+    "muscles": ["przednie deltoidalne", "boczne deltoidalne", "triceps", "górna część klatki"],
+    "difficulty": "medium",
+    "technique": "Stój stabilnie, stopy na szerokość bioder. Sztanga na wysokości obojczyków, chwytem nieco szerszym niż barki. Napnij pośladki i brzuch. Wyciśnij sztangę pionowo w górę, głowa lekko do tyłu żeby przepuścić sztangę. Na górze głowa między ramionami.",
+    "common_mistakes": ["Odchylanie się do tyłu", "Brak napięcia core", "Wyciskanie przed twarz", "Łokcie zbyt z przodu", "Rozluźnione kolana"],
+    "cues": ["Napnij pośladki", "Ściśnij brzuch", "Głowa przez okno", "Pchaj pionowo"],
+    "variations": ["Push press", "Wyciskanie hantli siedząc", "Arnold press", "Z-press"],
+    "contraindications": ["Problemy z barkami", "Problemy z kręgosłupem lędźwiowym"]
+  },
+  {
+    "exercise": "Hip thrust",
+    "muscles": ["pośladki", "dwugłowe ud"],
+    "difficulty": "easy",
+    "technique": "Oprzyj górną część pleców o ławkę. Sztanga na biodrach (użyj podkładki). Stopy na podłodze, kolana ugięte pod kątem 90 stopni na górze. Unieś biodra, ściskając pośladki. Na górze tułów równoległy do podłogi. Kontrolowany powrót.",
+    "common_mistakes": ["Przeprost w odcinku lędźwiowym", "Zbyt szeroko rozstawione stopy", "Pchanie z palców zamiast pięt", "Brak pełnego zakresu ruchu", "Odpychanie głowy od ławki"],
+    "cues": ["Ściśnij pośladki na górze", "Pchnij z pięt", "Patrz przed siebie", "Trzymaj żebra w dole"],
+    "variations": ["Glute bridge", "Single leg hip thrust", "Hip thrust z gumą", "Frog pump"],
+    "contraindications": []
+  },
+  {
+    "exercise": "Wznosy bokiem z hantlami",
+    "muscles": ["boczne deltoidalne", "przednie deltoidalne"],
+    "difficulty": "easy",
+    "technique": "Stój prosto, hantle przy bokach. Lekko ugięte łokcie przez cały ruch. Unieś ramiona bokiem do wysokości barków. Ręce lekko obrócone jakbyś wylewał wodę z butelki. Kontrolowany powrót.",
+    "common_mistakes": ["Prostowanie łokci", "Podnoszenie zbyt wysoko", "Używanie rozpędu", "Podnoszenie ramion przed tułów", "Wzruszanie barkami"],
+    "cues": ["Lekkie ugięcie łokci", "Prowadź łokciem", "Wylewaj wodę", "Nie wzruszaj ramionami"],
+    "variations": ["Wznosy na maszynie", "Wznosy na linkach", "Wznosy w opadzie", "Wznosy jednorącz"],
+    "contraindications": ["Zespół cieśni podbarkowej"]
+  },
+  {
+    "exercise": "Uginanie ramion ze sztangą",
+    "muscles": ["biceps", "przedramiona", "mięsień ramienno-promieniowy"],
+    "difficulty": "easy",
+    "technique": "Stój prosto, sztanga podchwytem na szerokość barków. Łokcie przy tułowiu przez cały ruch. Ugnij ramiona, unosząc sztangę do barków. Ściśnij biceps na górze. Kontrolowany powrót.",
+    "common_mistakes": ["Odchylanie tułowia", "Odrywanie łokci od tułowia", "Szarpanie ciężaru", "Niepełny zakres ruchu", "Zbyt szybki powrót"],
+    "cues": ["Łokcie przyklejone", "Stój prosto", "Ściśnij na górze", "Kontroluj negatyw"],
+    "variations": ["Uginanie hantlami", "Hammer curls", "Uginanie na modlitewniku", "Uginanie na linkach"],
+    "contraindications": ["Problemy z nadgarstkami"]
+  },
+  {
+    "exercise": "Prostowanie ramion na wyciągu (triceps)",
+    "muscles": ["triceps"],
+    "difficulty": "easy",
+    "technique": "Stań przodem do wyciągu górnego. Chwyć linkę lub drążek. Łokcie przy tułowiu. Prostuj ramiona w łokciach, ściskając triceps na dole. Kontrolowany powrót, nie pozwól żeby ciężar szarpnął.",
+    "common_mistakes": ["Odrywanie łokci od tułowia", "Używanie ramion do pchania", "Pochylanie się nad wyciągiem", "Zbyt szybki ruch", "Niepełny zakres ruchu"],
+    "cues": ["Łokcie przyklejone do boków", "Tylko ruch w łokciach", "Ściśnij triceps na dole", "Stój prosto"],
+    "variations": ["Overhead triceps extension", "Skull crushers", "Pompki na poręczach", "Diamond push-ups"],
+    "contraindications": ["Problemy z łokciami"]
+  },
+  {
+    "exercise": "Wypady z hantlami",
+    "muscles": ["czworogłowe ud", "pośladki", "dwugłowe ud"],
+    "difficulty": "medium",
+    "technique": "Stój prosto, hantle w rękach przy bokach. Zrób duży krok do przodu. Opuść biodra aż tylne kolano prawie dotknie podłogi. Przednie kolano nad kostką. Odepchnij się i wróć do pozycji wyjściowej.",
+    "common_mistakes": ["Kolano przed palcami stopy", "Za krótki krok", "Pochylanie tułowia", "Niestabilność w biodrach", "Uderzanie kolanem o podłogę"],
+    "cues": ["Duży krok", "Tułów pionowo", "Przednie kolano nad kostką", "Odepchnij się piętą"],
+    "variations": ["Walking lunges", "Reverse lunges", "Lateral lunges", "Przysiad bułgarski"],
+    "contraindications": ["Problemy z kolanami", "Problemy z równowagą"]
+  },
+  {
+    "exercise": "Plank (deska)",
+    "muscles": ["brzuch", "prostowniki grzbietu", "poprzeczny brzucha", "pośladki"],
+    "difficulty": "easy",
+    "technique": "Oprzyj się na przedramionach i palcach stóp. Ciało w jednej linii od głowy do pięt. Napnij brzuch i pośladki. Patrz w podłogę, szyja neutralna. Utrzymaj pozycję.",
+    "common_mistakes": ["Unoszenie bioder", "Opadanie bioder", "Zadarta głowa", "Wstrzymywanie oddechu", "Rozluźnione pośladki"],
+    "cues": ["Ciało jak deska", "Napnij pośladki", "Napnij brzuch", "Oddychaj normalnie"],
+    "variations": ["Side plank", "Plank z unoszeniem nóg", "Plank na rękach", "Plank z dotykiem barku"],
+    "contraindications": ["Ostre bóle pleców"]
+  }
+]
