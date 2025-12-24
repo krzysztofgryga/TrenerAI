@@ -1,0 +1,194 @@
+.ai-coach {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+    padding-bottom: 0;
+}
+
+.ai-coach .page-header {
+    flex-shrink: 0;
+}
+
+.ai-coach .page-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.title-icon {
+    color: var(--neon-purple);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+}
+
+.coach-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--neon-green);
+    padding: 0.4rem 0.8rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding-bottom: var(--spacing-xs);
+    scrollbar-width: none;
+}
+
+.quick-actions::-webkit-scrollbar {
+    display: none;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.5rem 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.quick-action-btn:hover {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: var(--neon-purple);
+}
+
+/* Chat Container */
+.chat-container {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 calc(-1 * var(--spacing-lg));
+    padding: 0 var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* Input Container */
+.chat-input-container {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - var(--spacing-lg) * 2);
+    max-width: calc(430px - var(--spacing-lg) * 2);
+    padding: var(--spacing-sm) !important;
+    z-index: 50;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    padding: var(--spacing-sm);
+}
+
+.chat-input::placeholder {
+    color: var(--text-muted);
+}
+
+.send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.send-btn:disabled {
+    cursor: not-allowed;
+}
+
+.send-btn--active {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+.send-btn--active:hover {
+    transform: scale(1.05);
+}
+
+/* Loading States */
+.status-dot--loading {
+    background: var(--neon-cyan);
+    animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-lg);
+    width: fit-content;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.quick-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

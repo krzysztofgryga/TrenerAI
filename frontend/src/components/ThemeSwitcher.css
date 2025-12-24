@@ -1,0 +1,96 @@
+.theme-switcher {
+    position: fixed;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: 200;
+}
+
+.theme-switcher-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.theme-switcher-btn:hover {
+    background: var(--glass-bg-hover);
+    color: var(--neon-purple);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.theme-menu {
+    position: absolute;
+    top: calc(100% + var(--spacing-sm));
+    right: 0;
+    min-width: 200px;
+    background: rgba(15, 15, 25, 0.95);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    animation: fadeInUp 0.2s ease forwards;
+    box-shadow: var(--shadow-card);
+}
+
+.theme-menu-header {
+    padding: var(--spacing-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+    padding: var(--spacing-md);
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+}
+
+.theme-option:hover {
+    background: var(--glass-bg-hover);
+}
+
+.theme-option--active {
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.theme-colors {
+    display: flex;
+    gap: 4px;
+}
+
+.theme-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    box-shadow: 0 0 8px currentColor;
+}
+
+.theme-name {
+    flex: 1;
+}
+
+.theme-check {
+    color: var(--neon-purple);
+    font-weight: 600;
+}

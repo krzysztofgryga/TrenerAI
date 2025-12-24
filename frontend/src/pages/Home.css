@@ -1,0 +1,151 @@
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.home-greeting {
+    flex: 1;
+}
+
+.home-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.home-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* Progress Card */
+.home-progress-card {
+    padding: var(--spacing-xl);
+}
+
+.home-progress-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+}
+
+.home-progress-info {
+    flex: 1;
+}
+
+.home-progress-info h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.home-progress-info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-md);
+}
+
+.home-progress-info .btn {
+    width: 100%;
+}
+
+/* Stats Card */
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.stat-icon {
+    margin-bottom: var(--spacing-sm);
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.section-header .section-title {
+    margin-bottom: 0;
+}
+
+.btn-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--neon-purple);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-link:hover {
+    color: var(--neon-pink);
+}
+
+/* Workout List */
+.workout-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Achievements */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.achievement-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.achievement-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: var(--spacing-sm);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+.achievement-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.achievement-card--locked {
+    opacity: 0.4;
+}
+
+.achievement-card--locked .achievement-icon {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+}
