@@ -51,3 +51,14 @@ htmlcov/
 
 # Node.js
 node_modules/
+frontend/dist/
+
+# Capacitor / Mobile
+frontend/ios/App/Pods/
+frontend/ios/App/App/public/
+frontend/ios/App/capacitor-cordova-ios-plugins/
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/app/src/main/assets/public/
+*.xcworkspace
+*.xcuserdata

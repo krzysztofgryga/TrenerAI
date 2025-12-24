@@ -1,0 +1,27 @@
+{
+  "appId": "com.trenerai.app",
+  "appName": "TrenerAI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f0a1a",
+      "showSpinner": true,
+      "spinnerColor": "#a855f7"
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0f0a1a"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

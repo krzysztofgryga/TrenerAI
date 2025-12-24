@@ -1,0 +1,71 @@
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shimmer effect overlay */
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.03) 50%,
+            transparent 100%);
+    pointer-events: none;
+}
+
+/* Variants */
+.glass-card--gradient {
+    background: var(--gradient-card);
+}
+
+.glass-card--solid {
+    background: rgba(20, 20, 30, 0.8);
+}
+
+/* Glow Effect */
+.glass-card--glow {
+    box-shadow: var(--shadow-glow);
+    animation: glow 3s ease-in-out infinite;
+}
+
+/* Clickable State */
+.glass-card--clickable {
+    cursor: pointer;
+}
+
+.glass-card--clickable:hover {
+    background: var(--glass-bg-hover);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+.glass-card--clickable:active {
+    transform: translateY(0);
+}
+
+/* Animated State */
+.glass-card--animated {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+/* Size Variants */
+.glass-card--compact {
+    padding: var(--spacing-md);
+}
+
+.glass-card--large {
+    padding: var(--spacing-xl);
+}
