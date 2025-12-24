@@ -2,24 +2,28 @@
 """
 Load all data collections into Qdrant vector database.
 
+This is the single script for loading ALL Qdrant collections in TrenerAI.
+
 Usage:
     python scripts/load_qdrant_collections.py
 
     # Load specific collection:
-    python scripts/load_qdrant_collections.py --collection techniques
-    python scripts/load_qdrant_collections.py --collection nutrition
-    python scripts/load_qdrant_collections.py --collection programs
+    python scripts/load_qdrant_collections.py -c exercises   # For LangGraph training generator
+    python scripts/load_qdrant_collections.py -c techniques  # Exercise techniques for RAG
+    python scripts/load_qdrant_collections.py -c nutrition   # Nutrition info for RAG
+    python scripts/load_qdrant_collections.py -c programs    # Training programs for RAG
 
     # Load all collections:
     python scripts/load_qdrant_collections.py --all
 
 Requires:
     - Qdrant running on localhost:6333
-    - LLM_PROVIDER and related env vars set
+    - Environment vars set in .env
 """
 
 import argparse
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -31,27 +35,58 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_core.documents import Document
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
-# Get embedding model based on provider
-def get_embeddings():
-    """Get embedding model based on LLM_PROVIDER."""
-    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+# =============================================================================
+# Logging
+# =============================================================================
 
-    if provider == "openai":
-        from langchain_openai import OpenAIEmbeddings
-        return OpenAIEmbeddings()
-    else:
-        from langchain_ollama import OllamaEmbeddings
-        return OllamaEmbeddings(
-            model=os.getenv("EMBEDDING_MODEL", "nomic-embed-text"),
-            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        )
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+
+# Collection names
+COLLECTIONS_CONFIG = {
+    # Original exercises collection (for LangGraph training generator)
+    "exercises": {
+        "collection_name": os.getenv("QDRANT_COLLECTION_NAME", "gym_exercises"),
+        "data_path": "data/exercises.json",
+        "description": "Exercises for training plan generator (LangGraph)",
+    },
+    # New RAG collections
+    "techniques": {
+        "collection_name": "trainer_techniques",
+        "data_path": "data/qdrant/techniques.json",
+        "description": "Exercise techniques, form cues, common mistakes",
+    },
+    "nutrition": {
+        "collection_name": "trainer_nutrition",
+        "data_path": "data/qdrant/nutrition.json",
+        "description": "Food items with macros and timing",
+    },
+    "programs": {
+        "collection_name": "trainer_programs",
+        "data_path": "data/qdrant/programs.json",
+        "description": "Training programs (PPL, FBW, Upper/Lower, etc.)",
+    },
+}
 
 
-def load_json(file_path: Path) -> list:
-    """Load JSON data from file."""
-    with open(file_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+# =============================================================================
+# Formatters
+# =============================================================================
+
+def format_exercise(item: dict) -> str:
+    """Format exercise from exercises.json for embedding."""
+    return f"{item['name']}: {item['desc']}"
 
 
 def format_technique(item: dict) -> str:
@@ -99,109 +134,234 @@ def format_program(item: dict) -> str:
     return "\n".join(parts)
 
 
-def create_documents(data: list, formatter: callable, source: str) -> list:
+FORMATTERS = {
+    "exercises": format_exercise,
+    "techniques": format_technique,
+    "nutrition": format_nutrition,
+    "programs": format_program,
+}
+
+
+# =============================================================================
+# Loading Functions
+# =============================================================================
+
+def load_json_data(file_path: Path, collection_type: str) -> list:
+    """Load JSON data from file."""
+    logger.info(f"Loading data from: {file_path}")
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"Data file not found: {file_path}")
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Handle exercises.json format (has "exercises" key)
+    if collection_type == "exercises":
+        if "exercises" not in data:
+            raise ValueError("Invalid exercises.json format. Expected 'exercises' key.")
+        return data["exercises"]
+
+    # Other collections are direct arrays
+    return data
+
+
+def create_documents(data: list, formatter: callable, collection_type: str) -> list:
     """Create LangChain documents from data."""
     docs = []
     for item in data:
         content = formatter(item)
-        doc = Document(
-            page_content=content,
-            metadata={"source": source, **item}
-        )
+        metadata = {"source": collection_type}
+
+        # Add item fields to metadata
+        if collection_type == "exercises":
+            metadata.update({
+                "id": item.get("id", ""),
+                "name": item.get("name", ""),
+                "type": item.get("type", ""),
+                "level": item.get("level", ""),
+            })
+        else:
+            metadata.update(item)
+
+        doc = Document(page_content=content, metadata=metadata)
         docs.append(doc)
+
     return docs
 
 
-def load_collection(name: str, data_path: Path, formatter: callable, qdrant_url: str):
+def load_collection(collection_type: str, qdrant_url: str) -> bool:
     """Load a single collection into Qdrant."""
-    from langchain_qdrant import QdrantVectorStore
+    from langchain_community.vectorstores import Qdrant
     from qdrant_client import QdrantClient
 
-    print(f"\n{'='*50}")
-    print(f"Loading collection: {name}")
-    print(f"{'='*50}")
+    if collection_type not in COLLECTIONS_CONFIG:
+        logger.error(f"Unknown collection type: {collection_type}")
+        return False
 
-    # Load data
-    data = load_json(data_path)
-    print(f"Loaded {len(data)} items from {data_path}")
+    config = COLLECTIONS_CONFIG[collection_type]
+    collection_name = config["collection_name"]
+    data_path = Path(__file__).parent.parent / config["data_path"]
 
-    # Create documents
-    docs = create_documents(data, formatter, name)
-    print(f"Created {len(docs)} documents")
-
-    # Get embeddings
-    embeddings = get_embeddings()
-    print(f"Using embeddings: {type(embeddings).__name__}")
-
-    # Check if collection exists and delete it
-    client = QdrantClient(url=qdrant_url)
-    collection_name = f"trainer_{name}"
+    logger.info("=" * 60)
+    logger.info(f"Loading: {collection_type}")
+    logger.info(f"Collection: {collection_name}")
+    logger.info(f"Description: {config['description']}")
+    logger.info("=" * 60)
 
     try:
-        client.delete_collection(collection_name)
-        print(f"Deleted existing collection: {collection_name}")
-    except Exception:
-        pass  # Collection doesn't exist
+        # Load data
+        data = load_json_data(data_path, collection_type)
+        logger.info(f"Loaded {len(data)} items")
 
-    # Create new collection with documents
-    vectorstore = QdrantVectorStore.from_documents(
-        docs,
-        embeddings,
-        url=qdrant_url,
-        collection_name=collection_name,
-    )
+        # Get formatter
+        formatter = FORMATTERS[collection_type]
 
-    print(f"Created collection '{collection_name}' with {len(docs)} documents")
-    return vectorstore
+        # Create documents
+        docs = create_documents(data, formatter, collection_type)
+        logger.info(f"Created {len(docs)} documents")
 
+        # Initialize embeddings (FastEmbed for consistency)
+        logger.info("Initializing FastEmbed embeddings...")
+        embeddings = FastEmbedEmbeddings()
+
+        # Create collection
+        logger.info(f"Sending to Qdrant...")
+        Qdrant.from_documents(
+            docs,
+            embeddings,
+            url=qdrant_url,
+            collection_name=collection_name,
+            force_recreate=True  # Clear existing
+        )
+
+        logger.info(f"SUCCESS: Created '{collection_name}' with {len(docs)} documents")
+
+        # Print stats for exercises
+        if collection_type == "exercises":
+            counts = {"warmup": 0, "main": 0, "cooldown": 0}
+            for item in data:
+                ex_type = item.get("type", "")
+                if ex_type in counts:
+                    counts[ex_type] += 1
+            logger.info(f"  - Warmup: {counts['warmup']}")
+            logger.info(f"  - Main: {counts['main']}")
+            logger.info(f"  - Cooldown: {counts['cooldown']}")
+
+        return True
+
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to load {collection_type}: {e}")
+        return False
+
+
+def show_collections(qdrant_url: str):
+    """Show all collections in Qdrant."""
+    from qdrant_client import QdrantClient
+
+    try:
+        client = QdrantClient(url=qdrant_url)
+        collections = client.get_collections().collections
+
+        logger.info("\n" + "=" * 60)
+        logger.info("Available collections in Qdrant:")
+        logger.info("=" * 60)
+
+        for col in collections:
+            info = client.get_collection(col.name)
+            logger.info(f"  - {col.name}: {info.points_count} documents")
+
+    except Exception as e:
+        logger.error(f"Failed to list collections: {e}")
+
+
+# =============================================================================
+# Main
+# =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Load data into Qdrant collections")
-    parser.add_argument("--collection", "-c", choices=["techniques", "nutrition", "programs"],
-                       help="Load specific collection")
-    parser.add_argument("--all", "-a", action="store_true", help="Load all collections")
-    parser.add_argument("--qdrant-url", default=os.getenv("QDRANT_URL", "http://localhost:6333"),
-                       help="Qdrant URL")
+    parser = argparse.ArgumentParser(
+        description="Load data into Qdrant collections for TrenerAI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Collections:
+  exercises   - Gym exercises for LangGraph training generator
+  techniques  - Exercise techniques, form cues (for RAG)
+  nutrition   - Food items with macros (for RAG)
+  programs    - Training programs like PPL, FBW (for RAG)
+
+Examples:
+  python scripts/load_qdrant_collections.py --all
+  python scripts/load_qdrant_collections.py -c exercises
+  python scripts/load_qdrant_collections.py -c techniques -c nutrition
+        """
+    )
+    parser.add_argument(
+        "--collection", "-c",
+        action="append",
+        choices=list(COLLECTIONS_CONFIG.keys()),
+        help="Collection(s) to load (can be used multiple times)"
+    )
+    parser.add_argument(
+        "--all", "-a",
+        action="store_true",
+        help="Load all collections"
+    )
+    parser.add_argument(
+        "--qdrant-url",
+        default=QDRANT_URL,
+        help=f"Qdrant URL (default: {QDRANT_URL})"
+    )
+    parser.add_argument(
+        "--list", "-l",
+        action="store_true",
+        help="List existing collections and exit"
+    )
+
     args = parser.parse_args()
 
-    data_dir = Path(__file__).parent.parent / "data" / "qdrant"
+    logger.info(f"Qdrant URL: {args.qdrant_url}")
 
-    collections = {
-        "techniques": (data_dir / "techniques.json", format_technique),
-        "nutrition": (data_dir / "nutrition.json", format_nutrition),
-        "programs": (data_dir / "programs.json", format_program),
-    }
+    # Just list collections
+    if args.list:
+        show_collections(args.qdrant_url)
+        return
 
+    # Determine what to load
     if args.all:
-        to_load = list(collections.keys())
+        to_load = list(COLLECTIONS_CONFIG.keys())
     elif args.collection:
-        to_load = [args.collection]
+        to_load = args.collection
     else:
         # Default: load all
-        to_load = list(collections.keys())
+        to_load = list(COLLECTIONS_CONFIG.keys())
 
-    print(f"Qdrant URL: {args.qdrant_url}")
-    print(f"Collections to load: {to_load}")
+    logger.info(f"Collections to load: {to_load}")
 
-    for name in to_load:
-        data_path, formatter = collections[name]
-        if not data_path.exists():
-            print(f"WARNING: Data file not found: {data_path}")
-            continue
-        load_collection(name, data_path, formatter, args.qdrant_url)
+    # Load collections
+    success = 0
+    failed = 0
+    for collection_type in to_load:
+        if load_collection(collection_type, args.qdrant_url):
+            success += 1
+        else:
+            failed += 1
 
-    print(f"\n{'='*50}")
-    print("Done! All collections loaded.")
-    print(f"{'='*50}")
+    # Summary
+    logger.info("\n" + "=" * 60)
+    logger.info("SUMMARY")
+    logger.info("=" * 60)
+    logger.info(f"Successful: {success}")
+    logger.info(f"Failed: {failed}")
 
-    # Show available collections
-    from qdrant_client import QdrantClient
-    client = QdrantClient(url=args.qdrant_url)
-    collections_list = client.get_collections()
-    print("\nAvailable collections:")
-    for col in collections_list.collections:
-        info = client.get_collection(col.name)
-        print(f"  - {col.name}: {info.points_count} documents")
+    # Show all collections
+    show_collections(args.qdrant_url)
+
+    if failed > 0:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
