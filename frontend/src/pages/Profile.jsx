@@ -15,8 +15,8 @@ import './Profile.css';
 
 function Profile() {
     const user = {
-        name: 'Kamil Gryga',
-        email: 'kamil@example.com',
+        name: 'Krzysztof Gryga',
+        email: 'Krzysztof@example.com',
         initials: 'KG',
         memberSince: 'Grudzień 2024',
         level: 'Pro Athlete'
