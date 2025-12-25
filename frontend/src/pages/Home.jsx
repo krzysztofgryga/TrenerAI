@@ -56,7 +56,7 @@ function Home() {
             {/* Header */}
             <div className="home-header">
                 <div className="home-greeting">
-                    <h1 className="home-title">Cześć, Kamil! 👋</h1>
+                    <h1 className="home-title">Cześć, Krzysiek! 👋</h1>
                     <p className="home-subtitle">Gotowy na dzisiejszy trening?</p>
                 </div>
                 <div className="avatar">KG</div>
