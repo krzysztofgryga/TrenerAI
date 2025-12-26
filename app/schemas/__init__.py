@@ -309,6 +309,18 @@ class ProgressEntry(BaseModel):
     notes: Optional[str] = None
 
 
+class Client(BaseModel):
+    """Legacy client schema for JSON storage."""
+    id: str
+    name: str
+    age: int
+    weight: float
+    goal: str
+    notes: str = ""
+    createdAt: str
+    progress: List[ProgressEntry] = []
+
+
 # =============================================================================
 # Feedback Schemas
 # =============================================================================
