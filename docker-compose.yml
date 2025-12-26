@@ -1,47 +1,138 @@
 version: '3.8'
 
+# --- DEFINICJE SIECI ---
+networks:
+  trener_net:
+    driver: bridge
+
+# --- DEFINICJE WOLUMENÓW ---
+volumes:
+  postgres_data:
+  qdrant_data:
+  ollama_models:
+
 services:
+  # ---------------------------------------------------------------------------
+  # 1. CORE API (FASTAPI)
+  # ---------------------------------------------------------------------------
+  api:
+    build: .
+    container_name: trener_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://trainer:trainer123@postgres:5432/trenerai
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      # Dev: hot reload kodu
+      - ./app:/app/app:ro
+      - ./data:/app/data:ro
+    networks:
+      - trener_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    # Zapobieganie zapchaniu dysku logami
+    logging: &logging-config
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Limity zasobów
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  # ---------------------------------------------------------------------------
+  # 2. DATABASE (POSTGRESQL)
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
-    container_name: trainer_postgres
-    restart: always
+    container_name: trener_postgres
+    restart: unless-stopped
+    # Mapujemy TYLKO na localhost (bezpieczeństwo)
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: trainer
       POSTGRES_PASSWORD: trainer123
       POSTGRES_DB: trenerai
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trener_net
+    logging: *logging-config
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trainer -d trenerai"]
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
+  # ---------------------------------------------------------------------------
+  # 3. VECTOR DATABASE (QDRANT)
+  # ---------------------------------------------------------------------------
   qdrant:
-    image: qdrant/qdrant:latest
-    container_name: trainer_qdrant
-    restart: always
+    image: qdrant/qdrant:v1.9.0
+    container_name: trener_qdrant
+    restart: unless-stopped
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
     volumes:
-      - ./qdrant_storage:/qdrant/storage
+      - qdrant_data:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - trener_net
+    logging: *logging-config
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
 
-  # Optional: Local LLM with Ollama
-  # Uncomment to use local LLM instead of OpenAI
+  # ---------------------------------------------------------------------------
+  # 4. LLM ENGINE (OLLAMA) - opcjonalny
+  # ---------------------------------------------------------------------------
   ollama:
     image: ollama/ollama:latest
-    container_name: trainer_ollama
-    restart: always
+    container_name: trener_ollama
+    restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
-      - ./ollama_models:/root/.ollama
-    # For GPU support, uncomment:
+      - ollama_models:/root/.ollama
+    networks:
+      - trener_net
+    logging: *logging-config
+    # Automatyczne pobieranie modelu przy starcie
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull qwen2.5:7b && wait"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 8G
+    # Opcja dla GPU (jeśli masz Nvidia, odkomentuj):
     # deploy:
     #   resources:
     #     reservations:
@@ -50,5 +141,20 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
-volumes:
-  postgres_data:
+  # ---------------------------------------------------------------------------
+  # 5. ALEMBIC MIGRATIONS (uruchom raz)
+  # ---------------------------------------------------------------------------
+  migrate:
+    build: .
+    container_name: trener_migrate
+    environment:
+      - DATABASE_URL=postgresql://trainer:trainer123@postgres:5432/trenerai
+    networks:
+      - trener_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    profiles:
+      - migrate
