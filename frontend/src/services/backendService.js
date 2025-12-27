@@ -7,21 +7,25 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // =============================================================================
 // TOKEN MANAGEMENT
+// Uses sessionStorage for tab isolation - each tab has its own session
 // =============================================================================
 
 const TOKEN_KEY = 'trenerai_token';
 const USER_KEY = 'trenerai_user';
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
-export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
+// Use sessionStorage for tab isolation (each tab = separate session)
+const storage = sessionStorage;
+
+export const getToken = () => storage.getItem(TOKEN_KEY);
+export const setToken = (token) => storage.setItem(TOKEN_KEY, token);
+export const removeToken = () => storage.removeItem(TOKEN_KEY);
 
 export const getStoredUser = () => {
-  const user = localStorage.getItem(USER_KEY);
+  const user = storage.getItem(USER_KEY);
   return user ? JSON.parse(user) : null;
 };
-export const setStoredUser = (user) => localStorage.setItem(USER_KEY, JSON.stringify(user));
-export const removeStoredUser = () => localStorage.removeItem(USER_KEY);
+export const setStoredUser = (user) => storage.setItem(USER_KEY, JSON.stringify(user));
+export const removeStoredUser = () => storage.removeItem(USER_KEY);
 
 export const isLoggedIn = () => !!getToken();
 
@@ -35,6 +39,8 @@ const authHeaders = () => {
 };
 
 const apiRequest = async (endpoint, options = {}) => {
+  const token = getToken();
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -44,10 +50,12 @@ const apiRequest = async (endpoint, options = {}) => {
     },
   });
 
-  if (response.status === 401) {
-    // Token expired - logout
+  if (response.status === 401 && token) {
+    // Only logout if we had a token but it was rejected (expired/invalid)
+    // Don't logout if we never had a token to begin with
+    console.warn('Token rejected, logging out...');
     logout();
-    throw new Error('Sesja wygasła. Zaloguj się ponownie.');
+    // Don't throw - let the caller handle the 401
   }
 
   return response;
