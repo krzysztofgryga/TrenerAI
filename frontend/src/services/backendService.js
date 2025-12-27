@@ -7,25 +7,83 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // =============================================================================
 // TOKEN MANAGEMENT
-// Uses sessionStorage for tab isolation - each tab has its own session
+// Hybrid approach: localStorage for persistence + tab ID for multi-session
+// - Mobile: stays logged in (localStorage persists)
+// - Desktop: multiple tabs can have different users via tab ID
 // =============================================================================
 
 const TOKEN_KEY = 'trenerai_token';
 const USER_KEY = 'trenerai_user';
+const TAB_ID_KEY = 'trenerai_tab_id';
 
-// Use sessionStorage for tab isolation (each tab = separate session)
-const storage = sessionStorage;
+// Generate unique tab ID on first load (stored in sessionStorage)
+const getTabId = () => {
+  let tabId = sessionStorage.getItem(TAB_ID_KEY);
+  if (!tabId) {
+    tabId = Math.random().toString(36).substring(2, 10);
+    sessionStorage.setItem(TAB_ID_KEY, tabId);
+  }
+  return tabId;
+};
 
-export const getToken = () => storage.getItem(TOKEN_KEY);
-export const setToken = (token) => storage.setItem(TOKEN_KEY, token);
-export const removeToken = () => storage.removeItem(TOKEN_KEY);
+// Get storage key with tab ID suffix for multi-session support
+const getTabKey = (baseKey) => `${baseKey}_${getTabId()}`;
+
+// Check if device is mobile
+const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// Token management with tab isolation (desktop) or shared (mobile)
+export const getToken = () => {
+  if (isMobile()) {
+    // Mobile: use shared localStorage (stay logged in)
+    return localStorage.getItem(TOKEN_KEY);
+  }
+  // Desktop: try tab-specific first, then fall back to shared
+  return localStorage.getItem(getTabKey(TOKEN_KEY)) || localStorage.getItem(TOKEN_KEY);
+};
+
+export const setToken = (token) => {
+  if (isMobile()) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    // Desktop: store with tab ID
+    localStorage.setItem(getTabKey(TOKEN_KEY), token);
+  }
+};
+
+export const removeToken = () => {
+  if (isMobile()) {
+    localStorage.removeItem(TOKEN_KEY);
+  } else {
+    localStorage.removeItem(getTabKey(TOKEN_KEY));
+  }
+};
 
 export const getStoredUser = () => {
-  const user = storage.getItem(USER_KEY);
+  let user;
+  if (isMobile()) {
+    user = localStorage.getItem(USER_KEY);
+  } else {
+    user = localStorage.getItem(getTabKey(USER_KEY)) || localStorage.getItem(USER_KEY);
+  }
   return user ? JSON.parse(user) : null;
 };
-export const setStoredUser = (user) => storage.setItem(USER_KEY, JSON.stringify(user));
-export const removeStoredUser = () => storage.removeItem(USER_KEY);
+
+export const setStoredUser = (user) => {
+  if (isMobile()) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } else {
+    localStorage.setItem(getTabKey(USER_KEY), JSON.stringify(user));
+  }
+};
+
+export const removeStoredUser = () => {
+  if (isMobile()) {
+    localStorage.removeItem(USER_KEY);
+  } else {
+    localStorage.removeItem(getTabKey(USER_KEY));
+  }
+};
 
 export const isLoggedIn = () => !!getToken();
 
