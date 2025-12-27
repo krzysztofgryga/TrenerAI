@@ -9,7 +9,7 @@ from app.schemas import ChatRequest
 from app.services.chat_service import ChatService
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["Chat"])
+router = APIRouter(prefix="/api", tags=["Chat"])
 
 
 def get_db_session():
