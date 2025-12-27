@@ -42,7 +42,9 @@
 }
 
 .profile-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     padding: 0.3rem 0.8rem;
     background: rgba(168, 85, 247, 0.2);
     border: 1px solid rgba(168, 85, 247, 0.4);
@@ -52,6 +54,40 @@
     color: var(--neon-purple);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Profile Data */
+.profile-data-card {
+    padding: var(--spacing-lg);
+}
+
+.profile-data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.profile-data-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.profile-data-item--full {
+    grid-column: span 2;
+}
+
+.profile-data-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-data-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .profile-meta {
