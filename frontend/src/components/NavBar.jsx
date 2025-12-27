@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, MessageCircle, User, Settings, Bell, Shield, HelpCircle, ChevronRight } from 'lucide-react';
+import { Home, Dumbbell, MessageCircle, User, Settings, Bell, Shield, HelpCircle, ChevronRight, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './NavBar.css';
 
 function NavBar() {
+    const { isTrainer } = useAuth();
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('theme') || 'purple';
     });
@@ -44,11 +46,17 @@ function NavBar() {
         setActiveSection(activeSection === sectionId ? null : sectionId);
     };
 
-    const navItems = [
+    // Different navigation for trainers vs clients
+    const navItems = isTrainer ? [
         { path: '/', icon: Home, label: 'Home' },
-        { path: '/workouts', icon: Dumbbell, label: 'Workouts' },
+        { path: '/clients', icon: Users, label: 'Klienci' },
         { path: '/coach', icon: MessageCircle, label: 'AI Coach' },
-        { path: '/profile', icon: User, label: 'Profile' },
+        { path: '/profile', icon: User, label: 'Profil' },
+    ] : [
+        { path: '/', icon: Home, label: 'Home' },
+        { path: '/workouts', icon: Dumbbell, label: 'Treningi' },
+        { path: '/coach', icon: MessageCircle, label: 'AI Coach' },
+        { path: '/profile', icon: User, label: 'Profil' },
     ];
 
     return (

@@ -1,0 +1,292 @@
+/* =============================================================================
+   CLIENTS PAGE STYLES
+   ============================================================================= */
+
+.clients {
+    padding-bottom: 120px;
+}
+
+/* =============================================================================
+   INVITE CARD
+   ============================================================================= */
+
+.invite-card {
+    padding: var(--spacing-lg);
+}
+
+.invite-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.invite-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.invite-text h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+}
+
+.invite-text p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.invite-btn {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+}
+
+.invite-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Code Display */
+.code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    background: rgba(168, 85, 247, 0.1);
+    border: 2px dashed rgba(168, 85, 247, 0.4);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.code-value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--neon-purple);
+    font-family: 'Fira Code', monospace;
+}
+
+.code-copy-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.code-copy-btn:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: var(--neon-purple);
+}
+
+.code-copy-btn svg {
+    transition: transform var(--transition-normal);
+}
+
+.code-copy-btn:active svg {
+    transform: scale(0.9);
+}
+
+/* =============================================================================
+   INVITATIONS LIST
+   ============================================================================= */
+
+.invitations-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.invitation-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+.invitation-item--used,
+.invitation-item--expired {
+    opacity: 0.5;
+}
+
+.invitation-code {
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'Fira Code', monospace;
+    letter-spacing: 0.1em;
+    color: var(--neon-cyan);
+    min-width: 100px;
+}
+
+.invitation-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.invitation-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, 0.1);
+    border: none;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.invitation-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* =============================================================================
+   CLIENTS LIST
+   ============================================================================= */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.loading-card,
+.empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
+    gap: var(--spacing-md);
+}
+
+.empty-icon {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.empty-card h3 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.empty-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.clients-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.client-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.client-card:hover {
+    transform: translateX(4px);
+}
+
+.client-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.client-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.client-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.client-email,
+.client-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.client-arrow {
+    color: var(--text-muted);
+    transition: transform var(--transition-normal);
+}
+
+.client-card:hover .client-arrow {
+    transform: translateX(4px);
+    color: var(--neon-purple);
+}
+
+/* Spinning animation */
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

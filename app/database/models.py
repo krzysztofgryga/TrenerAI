@@ -360,3 +360,47 @@ class ChatMessage(Base):
 
     def __repr__(self):
         return f"<ChatMessage(id={self.id}, user_id={self.user_id}, role='{self.role}')>"
+
+
+# =============================================================================
+# TRAINER INVITATIONS
+# =============================================================================
+
+class Invitation(Base):
+    """
+    Invitation codes for trainers to add clients.
+    Trainer generates a code, client enters it to join.
+    """
+    __tablename__ = "invitations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # 6-character unique code (e.g., "ABC123")
+    code = Column(String(10), unique=True, nullable=False, index=True)
+
+    # Expiration (24 hours by default)
+    expires_at = Column(DateTime, nullable=False)
+
+    # Usage tracking
+    is_used = Column(Boolean, default=False)
+    used_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    used_at = Column(DateTime, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    trainer = relationship("User", foreign_keys=[trainer_id])
+    used_by = relationship("User", foreign_keys=[used_by_id])
+
+    def __repr__(self):
+        return f"<Invitation(code='{self.code}', trainer_id={self.trainer_id}, is_used={self.is_used})>"
+
+    @property
+    def is_expired(self) -> bool:
+        return datetime.utcnow() > self.expires_at
+
+    @property
+    def is_valid(self) -> bool:
+        return not self.is_used and not self.is_expired

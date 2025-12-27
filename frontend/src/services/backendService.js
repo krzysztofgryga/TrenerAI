@@ -401,6 +401,79 @@ export const getTrainingHistory = async () => {
 };
 
 // =============================================================================
+// INVITATIONS
+// =============================================================================
+
+/**
+ * Generate invitation code (trainers only)
+ */
+export const generateInvitationCode = async (expiresHours = 24) => {
+  try {
+    const response = await apiRequest('/api/invitations/generate', {
+      method: 'POST',
+      body: JSON.stringify({ expires_hours: expiresHours }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Błąd generowania kodu');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Generate invitation error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Join trainer using invitation code (clients only)
+ */
+export const joinTrainer = async (code) => {
+  try {
+    const response = await apiRequest('/api/invitations/join', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Nieprawidłowy kod');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Join trainer error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get my invitations (trainers only)
+ */
+export const getMyInvitations = async () => {
+  try {
+    const response = await apiRequest('/api/invitations/my');
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error('Get invitations error:', error);
+    return [];
+  }
+};
+
+/**
+ * Delete invitation code (trainers only)
+ */
+export const deleteInvitation = async (code) => {
+  try {
+    const response = await apiRequest(`/api/invitations/${code}`, {
+      method: 'DELETE',
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Delete invitation error:', error);
+    return false;
+  }
+};
+
+// =============================================================================
 // LEGACY CLIENTS (JSON storage)
 // =============================================================================
 

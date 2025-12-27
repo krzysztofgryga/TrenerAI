@@ -21,7 +21,8 @@ from app.database.models import (
     GeneratedTraining,
     Feedback,
     DifficultyLevel,
-    ChatMessage
+    ChatMessage,
+    Invitation
 )
 
 __all__ = [
@@ -43,4 +44,5 @@ __all__ = [
     "Feedback",
     "DifficultyLevel",
     "ChatMessage",
+    "Invitation",
 ]

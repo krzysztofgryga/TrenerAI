@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Settings,
@@ -11,15 +12,45 @@ import {
     Calendar,
     Target,
     UserCircle,
-    Users
+    Users,
+    UserPlus,
+    Check,
+    X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { joinTrainer } from '../services/backendService';
 import GlassCard from '../components/GlassCard';
 import './Profile.css';
 
 function Profile() {
     const navigate = useNavigate();
     const { user, profile, logout, isTrainer } = useAuth();
+
+    // Join trainer state (for clients)
+    const [joinCode, setJoinCode] = useState('');
+    const [joining, setJoining] = useState(false);
+    const [joinResult, setJoinResult] = useState(null);
+    const [joinError, setJoinError] = useState(null);
+
+    // Handle join trainer
+    const handleJoinTrainer = async (e) => {
+        e.preventDefault();
+        if (!joinCode.trim()) return;
+
+        setJoining(true);
+        setJoinError(null);
+        setJoinResult(null);
+
+        try {
+            const result = await joinTrainer(joinCode.trim());
+            setJoinResult(result);
+            setJoinCode('');
+        } catch (err) {
+            setJoinError(err.message);
+        } finally {
+            setJoining(false);
+        }
+    };
 
     // Generate initials from name
     const getInitials = (name) => {
@@ -81,6 +112,65 @@ function Profile() {
                     <span>Członek od: {getMemberSince()}</span>
                 </div>
             </GlassCard>
+
+            {/* Join Trainer Section (for clients only) */}
+            {!isTrainer && (
+                <section className="section">
+                    <h2 className="section-title">
+                        <UserPlus size={20} />
+                        Dołącz do trenera
+                    </h2>
+                    <GlassCard className="join-trainer-card">
+                        <p className="join-trainer-desc">
+                            Masz kod zaproszenia od trenera? Wpisz go poniżej, aby dołączyć.
+                        </p>
+
+                        {joinResult && (
+                            <div className="join-success">
+                                <Check size={20} />
+                                <span>{joinResult.message}</span>
+                                <button
+                                    className="join-close"
+                                    onClick={() => setJoinResult(null)}
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        {joinError && (
+                            <div className="join-error">
+                                <span>{joinError}</span>
+                                <button
+                                    className="join-close"
+                                    onClick={() => setJoinError(null)}
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        <form className="join-form" onSubmit={handleJoinTrainer}>
+                            <input
+                                type="text"
+                                className="join-input"
+                                placeholder="Wpisz kod (np. ABC123)"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                maxLength={6}
+                                disabled={joining}
+                            />
+                            <button
+                                type="submit"
+                                className="btn btn-primary join-btn"
+                                disabled={joining || !joinCode.trim()}
+                            >
+                                {joining ? 'Dołączanie...' : 'Dołącz'}
+                            </button>
+                        </form>
+                    </GlassCard>
+                </section>
+            )}
 
             {/* Client Profile Data */}
             {profile && (

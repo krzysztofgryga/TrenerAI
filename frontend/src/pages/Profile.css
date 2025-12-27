@@ -262,3 +262,119 @@
     background: rgba(239, 68, 68, 0.2);
     border-color: rgba(239, 68, 68, 0.5);
 }
+
+/* =============================================================================
+   JOIN TRAINER SECTION
+   ============================================================================= */
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.join-trainer-card {
+    padding: var(--spacing-lg);
+}
+
+.join-trainer-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.join-form {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.join-input {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'Fira Code', monospace;
+    letter-spacing: 0.2em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.join-input:focus {
+    outline: none;
+    border-color: var(--neon-purple);
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.join-input::placeholder {
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: inherit;
+    font-weight: 400;
+}
+
+.join-btn {
+    flex-shrink: 0;
+    min-width: 100px;
+}
+
+.join-success {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: var(--radius-md);
+    color: #22c55e;
+    font-size: 0.9rem;
+}
+
+.join-success svg:first-child {
+    flex-shrink: 0;
+}
+
+.join-success span {
+    flex: 1;
+}
+
+.join-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    color: #ef4444;
+    font-size: 0.9rem;
+}
+
+.join-error span {
+    flex: 1;
+}
+
+.join-close {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+}
+
+.join-close:hover {
+    opacity: 1;
+}

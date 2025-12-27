@@ -6,6 +6,7 @@ import Workouts from './pages/Workouts';
 import AICoach from './pages/AICoach';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import Clients from './pages/Clients';
 import './App.css';
 
 // Protected route wrapper
@@ -91,6 +92,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clients"
+          element={
+            <ProtectedRoute>
+              <Clients />
             </ProtectedRoute>
           }
         />

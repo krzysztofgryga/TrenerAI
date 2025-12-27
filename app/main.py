@@ -47,7 +47,8 @@ def init_database():
         from app.database.connection import engine, Base
         from app.database.models import (
             User, ClientProfile, TrainerClient,
-            Group, GroupMember, GeneratedTraining, Feedback
+            Group, GroupMember, GeneratedTraining, Feedback,
+            ChatMessage, Invitation
         )
         # Create all tables automatically
         Base.metadata.create_all(bind=engine)
