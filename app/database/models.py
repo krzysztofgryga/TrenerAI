@@ -91,7 +91,11 @@ class User(Base):
     group_memberships = relationship("GroupMember", back_populates="client")
 
     # Trainings (both roles can have)
-    trainings = relationship("GeneratedTraining", back_populates="user")
+    trainings = relationship(
+        "GeneratedTraining",
+        foreign_keys="GeneratedTraining.user_id",
+        back_populates="user"
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role={self.role.value})>"
