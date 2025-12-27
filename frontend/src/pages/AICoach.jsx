@@ -1,29 +1,68 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Dumbbell, Apple, Moon, Loader2 } from 'lucide-react';
+import { Send, Sparkles, Dumbbell, Apple, Moon, Loader2, Trash2 } from 'lucide-react';
 import ChatMessage from '../components/ChatMessage';
 import GlassCard from '../components/GlassCard';
-import { getChatResponse } from '../services/backendService';
+import { getChatResponse, getChatHistory, clearChatHistory } from '../services/backendService';
+import { useAuth } from '../context/AuthContext';
 import './AICoach.css';
 
 function AICoach() {
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            text: 'Cześć! 👋 Jestem Twoim AI trenerem. Jak mogę Ci dzisiaj pomóc? Mogę zaplanować trening, doradzić w kwestii diety lub odpowiedzieć na pytania o ćwiczenia.',
-            isAI: true,
-            timestamp: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-        }
-    ]);
-
+    const { isAuthenticated } = useAuth();
+    const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(true);
     const messagesEndRef = useRef(null);
+
+    const welcomeMessage = {
+        id: 'welcome',
+        text: 'Cześć! 👋 Jestem Twoim AI trenerem. Jak mogę Ci dzisiaj pomóc? Mogę zaplanować trening, doradzić w kwestii diety lub odpowiedzieć na pytania o ćwiczenia.',
+        isAI: true,
+        timestamp: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+    };
 
     const quickActions = [
         { icon: Dumbbell, label: 'Zaplanuj trening', prompt: 'Zaplanuj mi trening na dziś' },
         { icon: Apple, label: 'Porada dietetyczna', prompt: 'Daj mi poradę dietetyczną' },
         { icon: Moon, label: 'Tips na regenerację', prompt: 'Jakie są najlepsze sposoby na regenerację po treningu?' },
     ];
+
+    // Load chat history on mount
+    useEffect(() => {
+        const loadHistory = async () => {
+            if (!isAuthenticated) {
+                setMessages([welcomeMessage]);
+                setHistoryLoading(false);
+                return;
+            }
+
+            try {
+                const data = await getChatHistory();
+                if (data.messages && data.messages.length > 0) {
+                    // Convert backend messages to frontend format
+                    const loadedMessages = data.messages.map(msg => ({
+                        id: msg.id,
+                        text: msg.content,
+                        isAI: msg.role === 'assistant',
+                        timestamp: new Date(msg.created_at).toLocaleTimeString('pl-PL', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })
+                    }));
+                    setMessages(loadedMessages);
+                } else {
+                    setMessages([welcomeMessage]);
+                }
+            } catch (error) {
+                console.error('Failed to load chat history:', error);
+                setMessages([welcomeMessage]);
+            } finally {
+                setHistoryLoading(false);
+            }
+        };
+
+        loadHistory();
+    }, [isAuthenticated]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,7 +74,7 @@ function AICoach() {
 
     // Convert messages to history format for API
     const getHistory = () => {
-        return messages.slice(1).map(msg => ({
+        return messages.filter(msg => msg.id !== 'welcome').map(msg => ({
             role: msg.isAI ? 'assistant' : 'user',
             content: msg.text
         }));
@@ -80,6 +119,17 @@ function AICoach() {
         }
     };
 
+    const handleClearHistory = async () => {
+        if (!window.confirm('Czy na pewno chcesz wyczyścić historię chatu?')) return;
+
+        try {
+            await clearChatHistory();
+            setMessages([welcomeMessage]);
+        } catch (error) {
+            console.error('Failed to clear history:', error);
+        }
+    };
+
     const handleQuickAction = (prompt) => {
         handleSend(prompt);
     };
@@ -91,6 +141,17 @@ function AICoach() {
         }
     };
 
+    if (historyLoading) {
+        return (
+            <div className="page ai-coach">
+                <div className="loading-container">
+                    <Loader2 size={40} className="spinning" />
+                    <p>Ładowanie historii...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="page ai-coach">
             <header className="page-header">
@@ -101,9 +162,20 @@ function AICoach() {
                     </h1>
                     <p className="page-subtitle">Twój osobisty trener 24/7</p>
                 </div>
-                <div className="coach-status">
-                    <span className={`status-dot ${isLoading ? 'status-dot--loading' : ''}`}></span>
-                    {isLoading ? 'Myśli...' : 'Online'}
+                <div className="coach-header-actions">
+                    {isAuthenticated && messages.length > 1 && (
+                        <button
+                            className="clear-history-btn"
+                            onClick={handleClearHistory}
+                            title="Wyczyść historię"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    )}
+                    <div className="coach-status">
+                        <span className={`status-dot ${isLoading ? 'status-dot--loading' : ''}`}></span>
+                        {isLoading ? 'Myśli...' : 'Online'}
+                    </div>
                 </div>
             </header>
 

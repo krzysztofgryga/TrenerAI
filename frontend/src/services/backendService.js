@@ -284,6 +284,38 @@ export const getChatResponse = async (message, history = []) => {
   }
 };
 
+/**
+ * Get chat history for current user
+ */
+export const getChatHistory = async (limit = 100, offset = 0) => {
+  try {
+    const response = await apiRequest(`/api/chat/history?limit=${limit}&offset=${offset}`);
+    if (!response.ok) {
+      if (response.status === 401) return { messages: [], total: 0 };
+      throw new Error('Failed to fetch chat history');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Get chat history error:', error);
+    return { messages: [], total: 0 };
+  }
+};
+
+/**
+ * Clear chat history for current user
+ */
+export const clearChatHistory = async () => {
+  try {
+    const response = await apiRequest('/api/chat/history', {
+      method: 'DELETE',
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Clear chat history error:', error);
+    return false;
+  }
+};
+
 // =============================================================================
 // WORKOUTS
 // =============================================================================

@@ -101,6 +101,9 @@ class User(Base):
         back_populates="user"
     )
 
+    # Chat history
+    chat_messages = relationship("ChatMessage", back_populates="user", order_by="ChatMessage.created_at")
+
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role={self.role.value})>"
 
@@ -327,3 +330,33 @@ class Feedback(Base):
 
     def __repr__(self):
         return f"<Feedback(id={self.id}, training_id={self.training_id}, rating={self.rating})>"
+
+
+# =============================================================================
+# CHAT HISTORY
+# =============================================================================
+
+class ChatMessage(Base):
+    """
+    Chat message history for AI conversations.
+    Messages are grouped by user - each user has one conversation thread.
+    """
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Message role: "user" or "assistant"
+    role = Column(String(20), nullable=False)
+
+    # Message content
+    content = Column(Text, nullable=False)
+
+    # Timestamp
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Relationships
+    user = relationship("User", back_populates="chat_messages")
+
+    def __repr__(self):
+        return f"<ChatMessage(id={self.id}, user_id={self.user_id}, role='{self.role}')>"

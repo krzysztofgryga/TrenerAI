@@ -20,7 +20,8 @@ from app.database.models import (
     GroupMember,
     GeneratedTraining,
     Feedback,
-    DifficultyLevel
+    DifficultyLevel,
+    ChatMessage
 )
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     "GeneratedTraining",
     "Feedback",
     "DifficultyLevel",
+    "ChatMessage",
 ]
