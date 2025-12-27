@@ -121,7 +121,7 @@ services:
       - trener_net
     logging: *logging-config
     # Automatyczne pobieranie modelu przy starcie
-    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull qwen2.5:7b && wait"]
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull llama3.2 && wait"]
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
