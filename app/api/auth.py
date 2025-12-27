@@ -298,3 +298,70 @@ async def update_my_profile(
     db.refresh(profile)
 
     return profile
+
+
+# =============================================================================
+# Debug/Admin Endpoints (TODO: Disable in production)
+# =============================================================================
+
+@router.post("/reset-test-accounts")
+async def reset_test_accounts(
+    db: Session = Depends(get_db)
+):
+    """
+    Reset test accounts for development.
+    WARNING: Disable this endpoint in production!
+    """
+    from app.services.auth_service import hash_password
+
+    test_password = "test123"
+    reset_count = 0
+
+    # Reset test client
+    client = db.query(User).filter(User.email == "test@client.pl").first()
+    if client:
+        client.password_hash = hash_password(test_password)
+        client.is_active = True
+        reset_count += 1
+    else:
+        # Create if not exists
+        client = User(
+            email="test@client.pl",
+            password_hash=hash_password(test_password),
+            name="Test Klient",
+            role="client",
+            is_active=True
+        )
+        db.add(client)
+        db.commit()
+        db.refresh(client)
+
+        # Create profile
+        profile = ClientProfile(user_id=client.id, age=30, weight=75.0, height=175.0, goals="Test")
+        db.add(profile)
+        reset_count += 1
+
+    # Reset test trainer
+    trainer = db.query(User).filter(User.email == "test@trainer.pl").first()
+    if trainer:
+        trainer.password_hash = hash_password(test_password)
+        trainer.is_active = True
+        reset_count += 1
+    else:
+        trainer = User(
+            email="test@trainer.pl",
+            password_hash=hash_password(test_password),
+            name="Test Trener",
+            role="trainer",
+            is_active=True
+        )
+        db.add(trainer)
+        reset_count += 1
+
+    db.commit()
+
+    return {
+        "message": f"Reset {reset_count} test accounts",
+        "accounts": ["test@client.pl", "test@trainer.pl"],
+        "password": test_password
+    }
