@@ -6,6 +6,7 @@ Handles:
 - JWT token creation/verification
 - User authentication
 """
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Optional
@@ -18,6 +19,8 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.database.models import User, UserRole
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
