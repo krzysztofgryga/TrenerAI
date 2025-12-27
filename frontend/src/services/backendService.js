@@ -264,6 +264,37 @@ export const getTrainerClients = async () => {
 };
 
 /**
+ * Get client details with profile (trainers only)
+ */
+export const getClientDetails = async (clientId) => {
+  try {
+    const response = await apiRequest(`/api/trainer/clients/${clientId}`);
+    if (!response.ok) throw new Error('Failed to fetch client details');
+    return await response.json();
+  } catch (error) {
+    console.error('Get client details error:', error);
+    return null;
+  }
+};
+
+/**
+ * Update client profile (trainers only)
+ */
+export const updateClientProfile = async (clientId, profileData) => {
+  try {
+    const response = await apiRequest(`/api/trainer/clients/${clientId}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    return await response.json();
+  } catch (error) {
+    console.error('Update client profile error:', error);
+    throw error;
+  }
+};
+
+/**
  * Add client to trainer
  */
 export const addTrainerClient = async (clientId, permissions = {}) => {

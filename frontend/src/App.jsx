@@ -7,6 +7,7 @@ import AICoach from './pages/AICoach';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Clients from './pages/Clients';
+import ClientDetail from './pages/ClientDetail';
 import './App.css';
 
 // Protected route wrapper
@@ -100,6 +101,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Clients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clients/:clientId"
+          element={
+            <ProtectedRoute>
+              <ClientDetail />
             </ProtectedRoute>
           }
         />

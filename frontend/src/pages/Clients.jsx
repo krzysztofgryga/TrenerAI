@@ -239,7 +239,7 @@ function Clients() {
                             <GlassCard
                                 key={client.id}
                                 className="client-card"
-                                onClick={() => console.log('Client details', client.id)}
+                                onClick={() => navigate(`/clients/${client.client?.id}`)}
                             >
                                 <div className="client-avatar">
                                     {getInitials(client.client?.name)}
