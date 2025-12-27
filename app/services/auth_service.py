@@ -121,12 +121,16 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
+        logger.warning(f"AUTH: User not found: {email}")
         return None
     if not verify_password(password, user.password_hash):
+        logger.warning(f"AUTH: Invalid password for: {email}")
         return None
     if not user.is_active:
+        logger.warning(f"AUTH: User inactive: {email}")
         return None
 
+    logger.info(f"AUTH: Login successful: {email}")
     return user
 
 
