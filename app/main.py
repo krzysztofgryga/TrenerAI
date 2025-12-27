@@ -42,17 +42,21 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 def init_database():
-    """Initialize database if available."""
+    """Initialize database - create all tables if they don't exist."""
     try:
-        from app.database import init_db, DB_AVAILABLE
-        if DB_AVAILABLE:
-            init_db()
-            logger.info("Database initialized successfully")
-            return True
-    except ImportError:
-        pass
+        from app.database.connection import engine, Base
+        from app.database.models import (
+            User, ClientProfile, TrainerClient,
+            Group, GroupMember, GeneratedTraining, Feedback
+        )
+        # Create all tables automatically
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created/verified successfully")
+        return True
+    except ImportError as e:
+        logger.warning(f"Database module not available: {e}")
     except Exception as e:
-        logger.warning(f"Database initialization failed: {e}")
+        logger.error(f"Database initialization failed: {e}")
     return False
 
 
