@@ -74,7 +74,7 @@ async def register(
 
     # Generate token
     access_token = create_access_token(
-        data={"sub": user.id, "role": user.role.value}
+        data={"sub": str(user.id), "role": user.role.value}
     )
 
     return TokenResponse(
@@ -108,7 +108,7 @@ async def login(
         )
 
     access_token = create_access_token(
-        data={"sub": user.id, "role": user.role.value}
+        data={"sub": str(user.id), "role": user.role.value}
     )
 
     return TokenResponse(
@@ -138,7 +138,7 @@ async def login_form(
         )
 
     access_token = create_access_token(
-        data={"sub": user.id, "role": user.role.value}
+        data={"sub": str(user.id), "role": user.role.value}
     )
 
     return TokenResponse(
