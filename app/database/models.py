@@ -56,8 +56,12 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
 
-    # Role determines access level
-    role = Column(SQLEnum(UserRole), default=UserRole.CLIENT, nullable=False)
+    # Role determines access level (use native_enum=False to store as VARCHAR)
+    role = Column(
+        SQLEnum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        default=UserRole.CLIENT.value,
+        nullable=False
+    )
 
     # Account status
     is_active = Column(Boolean, default=True, nullable=False)

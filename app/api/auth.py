@@ -59,7 +59,7 @@ async def register(
         email=user_data.email,
         password_hash=hash_password(user_data.password),
         name=user_data.name,
-        role=UserRole(user_data.role.value),
+        role=user_data.role.value,  # Use string value directly
         is_active=True
     )
     db.add(user)
