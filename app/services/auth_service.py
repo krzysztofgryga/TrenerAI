@@ -128,6 +128,9 @@ async def get_current_user(
     Raises:
         HTTPException 401 if token invalid or user not found
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Nieprawidłowy token autoryzacji",
@@ -135,25 +138,38 @@ async def get_current_user(
     )
 
     if not token:
+        logger.warning("AUTH: No token provided")
         raise credentials_exception
+
+    logger.info(f"AUTH: Token received (first 20 chars): {token[:20] if len(token) > 20 else token}...")
 
     payload = decode_access_token(token)
     if payload is None:
+        logger.warning("AUTH: Token decode failed")
         raise credentials_exception
+
+    logger.info(f"AUTH: Payload decoded: {payload}")
 
     user_id = payload.get("sub")
     if user_id is None:
+        logger.warning("AUTH: No 'sub' in payload")
         raise credentials_exception
 
     # Ensure user_id is int (JWT may return it as string)
     try:
         user_id = int(user_id)
     except (ValueError, TypeError):
+        logger.warning(f"AUTH: Could not convert user_id to int: {user_id}")
         raise credentials_exception
+
+    logger.info(f"AUTH: Looking for user with id={user_id}")
 
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
+        logger.warning(f"AUTH: User not found with id={user_id}")
         raise credentials_exception
+
+    logger.info(f"AUTH: User found: {user.email}")
 
     if not user.is_active:
         raise HTTPException(
