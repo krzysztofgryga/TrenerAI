@@ -65,6 +65,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     Returns:
         Encoded JWT token
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     to_encode = data.copy()
 
     if expires_delta:
@@ -73,7 +76,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
+    logger.info(f"CREATE: Using SECRET_KEY: {SECRET_KEY[:10]}...")
+    logger.info(f"CREATE: Payload: {to_encode}")
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    logger.info(f"CREATE: Token created, length: {len(encoded_jwt)}")
     return encoded_jwt
 
 
@@ -84,10 +90,20 @@ def decode_access_token(token: str) -> Optional[dict]:
     Returns:
         Token payload if valid, None otherwise
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     try:
+        logger.info(f"DECODE: Using SECRET_KEY: {SECRET_KEY[:10]}...")
+        logger.info(f"DECODE: Token length: {len(token)}")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        logger.info(f"DECODE: Success! Payload: {payload}")
         return payload
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"DECODE: JWTError: {type(e).__name__}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"DECODE: Unexpected error: {type(e).__name__}: {e}")
         return None
 
 
