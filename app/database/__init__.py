@@ -8,13 +8,20 @@ from app.database.connection import (
     get_db,
     get_db_session,
     init_db,
-    DATABASE_URL
+    DATABASE_URL,
+    DB_AVAILABLE
 )
 from app.database.models import (
     User,
+    UserRole,
+    ClientProfile,
+    TrainerClient,
+    Group,
+    GroupMember,
     GeneratedTraining,
     Feedback,
-    DifficultyLevel
+    DifficultyLevel,
+    ChatMessage
 )
 
 __all__ = [
@@ -25,8 +32,15 @@ __all__ = [
     "get_db_session",
     "init_db",
     "DATABASE_URL",
+    "DB_AVAILABLE",
     "User",
+    "UserRole",
+    "ClientProfile",
+    "TrainerClient",
+    "Group",
+    "GroupMember",
     "GeneratedTraining",
     "Feedback",
     "DifficultyLevel",
+    "ChatMessage",
 ]

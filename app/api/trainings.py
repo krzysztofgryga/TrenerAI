@@ -143,6 +143,27 @@ def get_training(training_id: int, db: Session = Depends(get_db_session)):
     return training
 
 
+@router.get("/api/trainings/history", response_model=List[TrainingHistoryResponse], tags=["Database"])
+def get_my_trainings(
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db_session)
+):
+    """Get training history for current user."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    from app.database import GeneratedTraining
+    from app.services.auth_service import get_current_user, oauth2_scheme
+    from fastapi import Request
+
+    # For now, return all trainings (auth integration later)
+    trainings = db.query(GeneratedTraining)\
+        .order_by(GeneratedTraining.created_at.desc())\
+        .offset(skip).limit(limit).all()
+    return trainings
+
+
 @router.get("/api/users/{user_id}/trainings", response_model=List[TrainingHistoryResponse], tags=["Database"])
 def get_user_trainings(
     user_id: int,

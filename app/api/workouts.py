@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from app.schemas import SavedWorkout
 from app.storage import load_workouts, save_workouts
 
-router = APIRouter(tags=["Workouts"])
+router = APIRouter(prefix="/api", tags=["Workouts"])
 
 
 @router.get("/workouts")

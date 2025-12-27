@@ -57,5 +57,19 @@ def init_db():
     Initialize database tables.
     Call this on application startup.
     """
-    from app.database.models import User, GeneratedTraining, Feedback
+    # Import ALL models to register them with SQLAlchemy metadata
+    from app.database.models import (
+        User, ClientProfile, TrainerClient,
+        Group, GroupMember, GeneratedTraining, Feedback
+    )
     Base.metadata.create_all(bind=engine)
+
+
+# Flag to check if database is available
+DB_AVAILABLE = True
+try:
+    # Quick test connection
+    with engine.connect() as conn:
+        pass
+except Exception:
+    DB_AVAILABLE = False

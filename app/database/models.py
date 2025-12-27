@@ -56,8 +56,12 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
 
-    # Role determines access level
-    role = Column(SQLEnum(UserRole), default=UserRole.CLIENT, nullable=False)
+    # Role determines access level (use native_enum=False to store as VARCHAR)
+    role = Column(
+        SQLEnum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        default=UserRole.CLIENT.value,
+        nullable=False
+    )
 
     # Account status
     is_active = Column(Boolean, default=True, nullable=False)
@@ -91,7 +95,14 @@ class User(Base):
     group_memberships = relationship("GroupMember", back_populates="client")
 
     # Trainings (both roles can have)
-    trainings = relationship("GeneratedTraining", back_populates="user")
+    trainings = relationship(
+        "GeneratedTraining",
+        foreign_keys="GeneratedTraining.user_id",
+        back_populates="user"
+    )
+
+    # Chat history
+    chat_messages = relationship("ChatMessage", back_populates="user", order_by="ChatMessage.created_at")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role={self.role.value})>"
@@ -319,3 +330,33 @@ class Feedback(Base):
 
     def __repr__(self):
         return f"<Feedback(id={self.id}, training_id={self.training_id}, rating={self.rating})>"
+
+
+# =============================================================================
+# CHAT HISTORY
+# =============================================================================
+
+class ChatMessage(Base):
+    """
+    Chat message history for AI conversations.
+    Messages are grouped by user - each user has one conversation thread.
+    """
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Message role: "user" or "assistant"
+    role = Column(String(20), nullable=False)
+
+    # Message content
+    content = Column(Text, nullable=False)
+
+    # Timestamp
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Relationships
+    user = relationship("User", back_populates="chat_messages")
+
+    def __repr__(self):
+        return f"<ChatMessage(id={self.id}, user_id={self.user_id}, role='{self.role}')>"

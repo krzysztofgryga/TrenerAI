@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
     Settings,
     Bell,
@@ -8,25 +9,36 @@ import {
     Trophy,
     Flame,
     Calendar,
-    Target
+    Target,
+    UserCircle,
+    Users
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import GlassCard from '../components/GlassCard';
 import './Profile.css';
 
 function Profile() {
-    const user = {
-        name: 'Krzysztof Gryga',
-        email: 'Krzysztof@example.com',
-        initials: 'KG',
-        memberSince: 'Grudzień 2024',
-        level: 'Pro Athlete'
+    const navigate = useNavigate();
+    const { user, profile, logout, isTrainer } = useAuth();
+
+    // Generate initials from name
+    const getInitials = (name) => {
+        if (!name) return 'U';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
+
+    // Format member since date
+    const getMemberSince = () => {
+        if (!user?.created_at) return 'Nowy członek';
+        const date = new Date(user.created_at);
+        return date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
     };
 
     const weeklyStats = [
-        { label: 'Treningi', value: '5', icon: Calendar },
-        { label: 'Kalorie', value: '2,450', icon: Flame },
-        { label: 'Cel', value: '85%', icon: Target },
-        { label: 'Streak', value: '12', icon: Trophy },
+        { label: 'Treningi', value: profile?.training_count || '0', icon: Calendar },
+        { label: 'Kalorie', value: profile?.calories_burned || '0', icon: Flame },
+        { label: 'Cel', value: profile?.goal_progress || '0%', icon: Target },
+        { label: 'Streak', value: profile?.streak_days || '0', icon: Trophy },
     ];
 
     const menuItems = [
@@ -35,6 +47,11 @@ function Profile() {
         { icon: Shield, label: 'Prywatność', description: 'Twoje dane i bezpieczeństwo' },
         { icon: HelpCircle, label: 'Pomoc', description: 'FAQ i wsparcie' },
     ];
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     return (
         <div className="page profile">
@@ -46,18 +63,59 @@ function Profile() {
             <GlassCard className="profile-card" glow>
                 <div className="profile-header">
                     <div className="profile-avatar">
-                        {user.initials}
+                        {getInitials(user?.name)}
                     </div>
                     <div className="profile-info">
-                        <h2 className="profile-name">{user.name}</h2>
-                        <p className="profile-email">{user.email}</p>
-                        <span className="profile-badge">{user.level}</span>
+                        <h2 className="profile-name">{user?.name || 'Użytkownik'}</h2>
+                        <p className="profile-email">{user?.email}</p>
+                        <span className="profile-badge">
+                            {isTrainer ? (
+                                <><Users size={14} /> Trener</>
+                            ) : (
+                                <><UserCircle size={14} /> Klient</>
+                            )}
+                        </span>
                     </div>
                 </div>
                 <div className="profile-meta">
-                    <span>Członek od: {user.memberSince}</span>
+                    <span>Członek od: {getMemberSince()}</span>
                 </div>
             </GlassCard>
+
+            {/* Client Profile Data */}
+            {profile && (
+                <section className="section">
+                    <h2 className="section-title">Twoje dane</h2>
+                    <GlassCard className="profile-data-card">
+                        <div className="profile-data-grid">
+                            {profile.age && (
+                                <div className="profile-data-item">
+                                    <span className="profile-data-label">Wiek</span>
+                                    <span className="profile-data-value">{profile.age} lat</span>
+                                </div>
+                            )}
+                            {profile.weight && (
+                                <div className="profile-data-item">
+                                    <span className="profile-data-label">Waga</span>
+                                    <span className="profile-data-value">{profile.weight} kg</span>
+                                </div>
+                            )}
+                            {profile.height && (
+                                <div className="profile-data-item">
+                                    <span className="profile-data-label">Wzrost</span>
+                                    <span className="profile-data-value">{profile.height} cm</span>
+                                </div>
+                            )}
+                            {profile.goal && (
+                                <div className="profile-data-item profile-data-item--full">
+                                    <span className="profile-data-label">Cel</span>
+                                    <span className="profile-data-value">{profile.goal}</span>
+                                </div>
+                            )}
+                        </div>
+                    </GlassCard>
+                </section>
+            )}
 
             {/* Weekly Stats */}
             <section className="section">
@@ -119,7 +177,7 @@ function Profile() {
             </section>
 
             {/* Logout Button */}
-            <button className="logout-btn">
+            <button className="logout-btn" onClick={handleLogout}>
                 <LogOut size={18} />
                 Wyloguj się
             </button>

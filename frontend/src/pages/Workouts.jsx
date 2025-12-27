@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dumbbell,
     Zap,
@@ -6,13 +6,30 @@ import {
     Bike,
     Timer,
     FlameKindling,
-    Waves
+    Waves,
+    Plus,
+    Loader2
 } from 'lucide-react';
+import { getWorkouts, getTrainingHistory } from '../services/backendService';
 import WorkoutCard from '../components/WorkoutCard';
+import GlassCard from '../components/GlassCard';
 import './Workouts.css';
+
+// Map category to icon
+const categoryIcons = {
+    strength: Dumbbell,
+    hiit: Zap,
+    yoga: Heart,
+    cardio: Bike,
+    core: FlameKindling,
+    swimming: Waves,
+    default: Dumbbell
+};
 
 function Workouts() {
     const [activeFilter, setActiveFilter] = useState('all');
+    const [workouts, setWorkouts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const filters = [
         { id: 'all', label: 'Wszystkie' },
@@ -22,7 +39,8 @@ function Workouts() {
         { id: 'hiit', label: 'HIIT' },
     ];
 
-    const workouts = [
+    // Default workouts if backend returns empty
+    const defaultWorkouts = [
         {
             id: 1,
             title: 'Push Day Power',
@@ -102,9 +120,84 @@ function Workouts() {
         }
     ];
 
+    // Fetch workouts from backend
+    useEffect(() => {
+        const fetchWorkouts = async () => {
+            try {
+                const [savedWorkouts, history] = await Promise.all([
+                    getWorkouts(),
+                    getTrainingHistory()
+                ]);
+
+                // Combine and format workouts
+                const allWorkouts = [];
+
+                // Add saved workouts
+                if (savedWorkouts && savedWorkouts.length > 0) {
+                    savedWorkouts.forEach(w => {
+                        allWorkouts.push({
+                            id: w.id,
+                            title: w.name || w.title || 'Trening',
+                            description: w.description || 'Zapisany trening',
+                            duration: w.duration || 30,
+                            calories: w.calories || 200,
+                            difficulty: w.difficulty || 'medium',
+                            icon: categoryIcons[w.category] || categoryIcons.default,
+                            category: w.category || 'strength',
+                            progress: w.progress || 0
+                        });
+                    });
+                }
+
+                // Add history trainings
+                if (history && history.length > 0) {
+                    history.forEach(h => {
+                        allWorkouts.push({
+                            id: h.id,
+                            title: h.name || 'Trening AI',
+                            description: h.focus_area || 'Wygenerowany plan treningowy',
+                            duration: h.duration || 45,
+                            calories: h.estimated_calories || 300,
+                            difficulty: h.difficulty || 'medium',
+                            icon: categoryIcons[h.category] || Dumbbell,
+                            category: h.category || 'strength',
+                            progress: h.completed ? 100 : 0
+                        });
+                    });
+                }
+
+                // Use fetched workouts or default
+                setWorkouts(allWorkouts.length > 0 ? allWorkouts : defaultWorkouts);
+            } catch (error) {
+                console.error('Failed to fetch workouts:', error);
+                setWorkouts(defaultWorkouts);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchWorkouts();
+    }, []);
+
     const filteredWorkouts = activeFilter === 'all'
         ? workouts
         : workouts.filter(w => w.category === activeFilter);
+
+    if (loading) {
+        return (
+            <div className="page workouts">
+                <header className="page-header">
+                    <div>
+                        <h1 className="page-title">Treningi</h1>
+                        <p className="page-subtitle">Ładowanie...</p>
+                    </div>
+                </header>
+                <div className="loading-container">
+                    <Loader2 size={40} className="spinning" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page workouts">
@@ -136,20 +229,32 @@ function Workouts() {
             </div>
 
             {/* Workouts List */}
-            <div className="workouts-list">
-                {filteredWorkouts.map((workout, index) => (
-                    <div
-                        key={workout.id}
-                        className="workout-item animate-fade-in"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                        <WorkoutCard
-                            {...workout}
-                            onClick={() => console.log('Start workout', workout.id)}
-                        />
-                    </div>
-                ))}
-            </div>
+            {filteredWorkouts.length > 0 ? (
+                <div className="workouts-list">
+                    {filteredWorkouts.map((workout, index) => (
+                        <div
+                            key={workout.id}
+                            className="workout-item animate-fade-in"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                            <WorkoutCard
+                                {...workout}
+                                onClick={() => console.log('Start workout', workout.id)}
+                            />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <GlassCard className="empty-state">
+                    <Dumbbell size={48} className="empty-icon" />
+                    <h3>Brak treningów</h3>
+                    <p>Nie masz jeszcze zapisanych treningów w tej kategorii.</p>
+                    <button className="btn btn-primary">
+                        <Plus size={18} />
+                        Wygeneruj trening
+                    </button>
+                </GlassCard>
+            )}
         </div>
     );
 }

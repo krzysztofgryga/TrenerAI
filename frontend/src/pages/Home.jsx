@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Trophy,
     Flame,
@@ -6,23 +8,68 @@ import {
     Dumbbell,
     Zap,
     TrendingUp,
-    ChevronRight
+    ChevronRight,
+    Users
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getTrainerDashboard, getWorkouts } from '../services/backendService';
 import GlassCard from '../components/GlassCard';
 import ProgressRing from '../components/ProgressRing';
 import WorkoutCard from '../components/WorkoutCard';
 import './Home.css';
 
 function Home() {
-    const todayProgress = 68;
+    const navigate = useNavigate();
+    const { user, profile, isTrainer } = useAuth();
+    const [dashboardData, setDashboardData] = useState(null);
+    const [recentWorkouts, setRecentWorkouts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Generate initials from name
+    const getInitials = (name) => {
+        if (!name) return 'U';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
+
+    // Fetch data on mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                if (isTrainer) {
+                    const data = await getTrainerDashboard();
+                    setDashboardData(data);
+                }
+                const workouts = await getWorkouts();
+                setRecentWorkouts(workouts.slice(0, 2));
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [isTrainer]);
+
+    const todayProgress = profile?.goal_progress || 68;
 
     const quickStats = [
-        { icon: Flame, value: '420', label: 'Calories', color: 'var(--neon-pink)' },
-        { icon: Footprints, value: '8,234', label: 'Steps', color: 'var(--neon-cyan)' },
-        { icon: Timer, value: '45', label: 'Minutes', color: 'var(--neon-purple)' },
+        { icon: Flame, value: profile?.calories_today || '0', label: 'Kalorie', color: 'var(--neon-pink)' },
+        { icon: Footprints, value: profile?.steps_today || '0', label: 'Kroki', color: 'var(--neon-cyan)' },
+        { icon: Timer, value: profile?.minutes_today || '0', label: 'Minuty', color: 'var(--neon-purple)' },
     ];
 
-    const upcomingWorkouts = [
+    // Default workouts if none from backend
+    const upcomingWorkouts = recentWorkouts.length > 0 ? recentWorkouts.map(w => ({
+        id: w.id,
+        title: w.name || w.title,
+        description: w.description || 'Trening wygenerowany przez AI',
+        duration: w.duration || 30,
+        calories: w.calories || 200,
+        difficulty: w.difficulty || 'medium',
+        icon: Dumbbell,
+        progress: w.progress || 0
+    })) : [
         {
             id: 1,
             title: 'Morning HIIT',
@@ -56,34 +103,77 @@ function Home() {
             {/* Header */}
             <div className="home-header">
                 <div className="home-greeting">
-                    <h1 className="home-title">Cześć, Krzysiek! 👋</h1>
-                    <p className="home-subtitle">Gotowy na dzisiejszy trening?</p>
+                    <h1 className="home-title">
+                        Cześć, {user?.name?.split(' ')[0] || 'Użytkowniku'}!
+                    </h1>
+                    <p className="home-subtitle">
+                        {isTrainer ? 'Sprawdź swoich klientów' : 'Gotowy na dzisiejszy trening?'}
+                    </p>
                 </div>
-                <div className="avatar">KG</div>
+                <div className="avatar" onClick={() => navigate('/profile')}>
+                    {getInitials(user?.name)}
+                </div>
             </div>
 
-            {/* Today's Progress */}
-            <section className="section">
-                <h2 className="section-title">Dzisiejszy postęp</h2>
-                <GlassCard className="home-progress-card" glow>
-                    <div className="home-progress-content">
-                        <ProgressRing
-                            progress={todayProgress}
-                            size={140}
-                            strokeWidth={10}
-                            label="ukończone"
-                        />
-                        <div className="home-progress-info">
-                            <h3>Świetna robota!</h3>
-                            <p>Pozostało jeszcze 32% do osiągnięcia dzisiejszego celu.</p>
-                            <button className="btn btn-primary">
-                                <Zap size={18} />
-                                Kontynuuj
-                            </button>
+            {/* Trainer Dashboard */}
+            {isTrainer && dashboardData && (
+                <section className="section">
+                    <h2 className="section-title">Panel trenera</h2>
+                    <GlassCard className="trainer-dashboard" glow>
+                        <div className="trainer-stats">
+                            <div className="trainer-stat">
+                                <Users size={24} className="trainer-stat-icon" />
+                                <div className="trainer-stat-info">
+                                    <span className="trainer-stat-value">{dashboardData.total_clients || 0}</span>
+                                    <span className="trainer-stat-label">Klientów</span>
+                                </div>
+                            </div>
+                            <div className="trainer-stat">
+                                <Dumbbell size={24} className="trainer-stat-icon" />
+                                <div className="trainer-stat-info">
+                                    <span className="trainer-stat-value">{dashboardData.total_trainings || 0}</span>
+                                    <span className="trainer-stat-label">Treningów</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </GlassCard>
-            </section>
+                    </GlassCard>
+                </section>
+            )}
+
+            {/* Today's Progress (for clients) */}
+            {!isTrainer && (
+                <section className="section">
+                    <h2 className="section-title">Dzisiejszy postęp</h2>
+                    <GlassCard className="home-progress-card" glow>
+                        <div className="home-progress-content">
+                            <ProgressRing
+                                progress={todayProgress}
+                                size={140}
+                                strokeWidth={10}
+                                label="ukończone"
+                            />
+                            <div className="home-progress-info">
+                                <h3>
+                                    {todayProgress >= 100 ? 'Cel osiągnięty!' :
+                                     todayProgress >= 70 ? 'Świetna robota!' :
+                                     todayProgress >= 40 ? 'Tak trzymaj!' :
+                                     'Zaczynamy!'}
+                                </h3>
+                                <p>
+                                    {todayProgress >= 100 ?
+                                        'Gratulacje! Osiągnąłeś dzisiejszy cel!' :
+                                        `Pozostało jeszcze ${100 - todayProgress}% do osiągnięcia dzisiejszego celu.`
+                                    }
+                                </p>
+                                <button className="btn btn-primary" onClick={() => navigate('/workouts')}>
+                                    <Zap size={18} />
+                                    {todayProgress > 0 ? 'Kontynuuj' : 'Zacznij'}
+                                </button>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </section>
+            )}
 
             {/* Quick Stats */}
             <section className="section">
@@ -107,7 +197,7 @@ function Home() {
             <section className="section">
                 <div className="section-header">
                     <h2 className="section-title">Nadchodzące treningi</h2>
-                    <button className="btn-link">
+                    <button className="btn-link" onClick={() => navigate('/workouts')}>
                         Zobacz wszystkie <ChevronRight size={16} />
                     </button>
                 </div>
@@ -116,7 +206,7 @@ function Home() {
                         <WorkoutCard
                             key={workout.id}
                             {...workout}
-                            onClick={() => console.log('Open workout', workout.id)}
+                            onClick={() => navigate('/workouts')}
                         />
                     ))}
                 </div>

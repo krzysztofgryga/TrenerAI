@@ -149,3 +149,52 @@
     background: rgba(255, 255, 255, 0.1);
     box-shadow: none;
 }
+
+/* Trainer Dashboard */
+.trainer-dashboard {
+    padding: var(--spacing-lg);
+}
+
+.trainer-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: var(--spacing-lg);
+}
+
+.trainer-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.trainer-stat-icon {
+    color: var(--neon-purple);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+}
+
+.trainer-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.trainer-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.trainer-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Avatar clickable */
+.avatar {
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+}

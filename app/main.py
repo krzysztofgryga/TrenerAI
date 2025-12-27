@@ -42,18 +42,83 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 def init_database():
-    """Initialize database if available."""
+    """Initialize database - create all tables if they don't exist."""
     try:
-        from app.database import init_db, DB_AVAILABLE
-        if DB_AVAILABLE:
-            init_db()
-            logger.info("Database initialized successfully")
-            return True
-    except ImportError:
-        pass
+        from app.database.connection import engine, Base
+        from app.database.models import (
+            User, ClientProfile, TrainerClient,
+            Group, GroupMember, GeneratedTraining, Feedback
+        )
+        # Create all tables automatically
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created/verified successfully")
+        return True
+    except ImportError as e:
+        logger.warning(f"Database module not available: {e}")
     except Exception as e:
-        logger.warning(f"Database initialization failed: {e}")
+        logger.error(f"Database initialization failed: {e}")
     return False
+
+
+def seed_test_accounts():
+    """
+    Create test accounts for development/testing.
+
+    Test accounts (password for both: test123):
+    - Client: test@client.pl
+    - Trainer: test@trainer.pl
+    """
+    try:
+        from app.database.connection import SessionLocal
+        from app.database.models import User, UserRole, ClientProfile
+        from app.services.auth_service import hash_password
+
+        db = SessionLocal()
+
+        # Test Client Account
+        client_email = "test@client.pl"
+        if not db.query(User).filter(User.email == client_email).first():
+            client = User(
+                email=client_email,
+                password_hash=hash_password("test123"),
+                name="Test Klient",
+                role="client",
+                is_active=True
+            )
+            db.add(client)
+            db.commit()
+            db.refresh(client)
+
+            # Create client profile
+            profile = ClientProfile(
+                user_id=client.id,
+                age=30,
+                weight=75.0,
+                height=175.0,
+                goals="Budowa masy mięśniowej"
+            )
+            db.add(profile)
+            db.commit()
+            logger.info(f"Created test client account: {client_email}")
+
+        # Test Trainer Account
+        trainer_email = "test@trainer.pl"
+        if not db.query(User).filter(User.email == trainer_email).first():
+            trainer = User(
+                email=trainer_email,
+                password_hash=hash_password("test123"),
+                name="Test Trener",
+                role="trainer",
+                is_active=True
+            )
+            db.add(trainer)
+            db.commit()
+            logger.info(f"Created test trainer account: {trainer_email}")
+
+        db.close()
+
+    except Exception as e:
+        logger.error(f"Failed to seed test accounts: {e}")
 
 
 # =============================================================================
@@ -64,7 +129,8 @@ def init_database():
 async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown events."""
     # Startup
-    init_database()
+    if init_database():
+        seed_test_accounts()
     yield
     # Shutdown (cleanup if needed)
 

@@ -25,9 +25,10 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql://trainer:trainer123@postgres:5432/trenerai
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - OLLAMA_HOST=http://ollama:11434
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=llama3.2
     volumes:
       # Dev: hot reload kodu
       - ./app:/app/app:ro
@@ -120,7 +121,7 @@ services:
       - trener_net
     logging: *logging-config
     # Automatyczne pobieranie modelu przy starcie
-    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull qwen2.5:7b && wait"]
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull llama3.2 && wait"]
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s

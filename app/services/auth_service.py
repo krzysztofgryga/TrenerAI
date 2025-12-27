@@ -65,6 +65,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     Returns:
         Encoded JWT token
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     to_encode = data.copy()
 
     if expires_delta:
@@ -73,7 +76,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
+    logger.info(f"CREATE: Using SECRET_KEY: {SECRET_KEY[:10]}...")
+    logger.info(f"CREATE: Payload: {to_encode}")
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    logger.info(f"CREATE: Token created, length: {len(encoded_jwt)}")
     return encoded_jwt
 
 
@@ -84,10 +90,20 @@ def decode_access_token(token: str) -> Optional[dict]:
     Returns:
         Token payload if valid, None otherwise
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     try:
+        logger.info(f"DECODE: Using SECRET_KEY: {SECRET_KEY[:10]}...")
+        logger.info(f"DECODE: Token length: {len(token)}")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        logger.info(f"DECODE: Success! Payload: {payload}")
         return payload
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"DECODE: JWTError: {type(e).__name__}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"DECODE: Unexpected error: {type(e).__name__}: {e}")
         return None
 
 
@@ -128,6 +144,9 @@ async def get_current_user(
     Raises:
         HTTPException 401 if token invalid or user not found
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Nieprawidłowy token autoryzacji",
@@ -135,19 +154,38 @@ async def get_current_user(
     )
 
     if not token:
+        logger.warning("AUTH: No token provided")
         raise credentials_exception
+
+    logger.info(f"AUTH: Token received (first 20 chars): {token[:20] if len(token) > 20 else token}...")
 
     payload = decode_access_token(token)
     if payload is None:
+        logger.warning("AUTH: Token decode failed")
         raise credentials_exception
 
-    user_id: int = payload.get("sub")
+    logger.info(f"AUTH: Payload decoded: {payload}")
+
+    user_id = payload.get("sub")
     if user_id is None:
+        logger.warning("AUTH: No 'sub' in payload")
         raise credentials_exception
+
+    # Ensure user_id is int (JWT may return it as string)
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        logger.warning(f"AUTH: Could not convert user_id to int: {user_id}")
+        raise credentials_exception
+
+    logger.info(f"AUTH: Looking for user with id={user_id}")
 
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
+        logger.warning(f"AUTH: User not found with id={user_id}")
         raise credentials_exception
+
+    logger.info(f"AUTH: User found: {user.email}")
 
     if not user.is_active:
         raise HTTPException(
