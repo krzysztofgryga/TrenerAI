@@ -46,15 +46,22 @@ async def register(
 
     Returns JWT token on success.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"REGISTER: Attempting to register: {user_data.email}, role={user_data.role}")
+
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
+        logger.warning(f"REGISTER: Email already exists: {user_data.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email jest już zarejestrowany"
         )
 
     # Create user
+    logger.info(f"REGISTER: Creating user: {user_data.email}")
     user = User(
         email=user_data.email,
         password_hash=hash_password(user_data.password),
@@ -65,6 +72,7 @@ async def register(
     db.add(user)
     db.commit()
     db.refresh(user)
+    logger.info(f"REGISTER: User created with id={user.id}")
 
     # If client, create empty profile
     if user.role == UserRole.CLIENT:
@@ -76,6 +84,8 @@ async def register(
     access_token = create_access_token(
         data={"sub": str(user.id), "role": user.role.value}
     )
+
+    logger.info(f"REGISTER: Success for {user_data.email}, user_id={user.id}")
 
     return TokenResponse(
         access_token=access_token,
